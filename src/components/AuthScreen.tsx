@@ -176,58 +176,46 @@ export default function AuthScreen({
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 flex flex-col justify-center relative py-12 px-4 sm:px-6 lg:px-8 font-sans overflow-hidden">
-      {/* Dynamic Ambient Background Mesh */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_40%,#000_70%,transparent_100%)] opacity-35" />
-      
-      {/* Decorative colored glow fields */}
-      <div className="absolute top-1/4 left-1/3 -translate-x-1/2 w-96 h-96 bg-purple-500/10 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/3 translate-x-1/2 w-[400px] h-[400px] bg-yellow-500/5 rounded-full blur-[150px] pointer-events-none" />
-
-      {/* Modern thin top accent bar */}
-      <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-purple-600 via-[#9333ea] to-amber-500 z-10" />
+    <div className="min-h-screen bg-[#070b13] flex flex-col justify-center relative py-12 px-4 sm:px-6 lg:px-8 font-sans overflow-hidden">
       
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center space-y-4 relative z-10">
         {/* Brand visual header */}
         <motion.div 
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="inline-flex items-center gap-2.5 px-4 py-2 bg-indigo-950/40 border border-indigo-500/35 rounded-full backdrop-blur-md shadow-[0_0_15px_rgba(99,102,241,0.15)]"
+          className="inline-flex items-center gap-2 px-3 py-1 bg-blue-950/40 border border-blue-550/30 rounded-full backdrop-blur-md"
         >
-          <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-[#02050b] to-[#0d1220] border border-cyan-400/40 flex items-center justify-center text-white font-black text-xs shadow-[0_0_10px_rgba(34,211,238,0.4)] shrink-0">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400 drop-shadow-[0_0_4px_#22d3ee]">X</span>
+          <div className="w-5 h-5 rounded-md bg-[#0c1222] border border-blue-400 flex items-center justify-center text-white font-black text-xs shrink-0">
+            <span className="text-blue-400">X</span>
           </div>
-          <span className="text-[9px] font-black text-indigo-300 uppercase tracking-widest leading-none font-mono">
-            XENA PORTFOLIO LEDGER • Sovereign Class
+          <span className="text-[9px] font-bold text-blue-300 uppercase tracking-widest font-mono">
+            XENA PREMIUM WEALTH
           </span>
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
+          initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.1, duration: 0.5 }}
+          transition={{ delay: 0.05, duration: 0.4 }}
         >
           <h2 className="text-3xl font-sans font-black text-white tracking-tight leading-none">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-white to-indigo-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.7)] font-black">X</span>ENA PORTFOLIO
+            <span className="text-blue-400 font-black">X</span>ENA PREMIUM WEALTH
           </h2>
-          <p className="mt-2 text-xs text-slate-400 font-extrabold max-w-xs mx-auto leading-relaxed">
-            High-Yield Global Corporate Shares & Protected Decentralized Ledger.
+          <p className="mt-2 text-xs text-slate-400 font-semibold max-w-xs mx-auto leading-relaxed">
+            High-Yield Global Corporate Shares & Secured Multi-Asset Digital Vault.
           </p>
         </motion.div>
       </div>
 
       <motion.div 
-        initial={{ opacity: 0, y: 25, scale: 0.98 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
         className="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10"
       >
         {/* Card Frame */}
-        <div className="bg-slate-900/80 backdrop-blur-xl py-8 px-6 sm:px-10 rounded-3xl border border-slate-800/80 shadow-2xl relative overflow-hidden">
+        <div className="bg-[#0b0e14] py-8 px-6 sm:px-10 rounded-3xl border border-slate-800 shadow-2xl relative">
           
-          {/* Subtle upper glow corner */}
-          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-purple-500/10 to-transparent rounded-bl-full pointer-events-none" />
-
           {/* Form tab toggle */}
           <div className="flex bg-slate-950 p-1.5 rounded-2xl border border-slate-800">
             <button
@@ -238,7 +226,7 @@ export default function AuthScreen({
               }}
               className={`flex-1 py-2.5 text-center text-xs font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer relative ${
                 tab === 'signin'
-                  ? 'bg-purple-600/15 border border-purple-500/35 text-purple-400 font-black shadow-inner shadow-purple-500/5'
+                  ? 'bg-blue-600/15 border border-blue-500/35 text-blue-400 font-black shadow-inner'
                   : 'text-slate-450 hover:text-slate-200'
               }`}
             >
@@ -252,7 +240,7 @@ export default function AuthScreen({
               }}
               className={`flex-1 py-2.5 text-center text-xs font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer relative ${
                 tab === 'signup'
-                  ? 'bg-purple-600/15 border border-purple-500/35 text-purple-400 font-black shadow-inner shadow-purple-500/5'
+                  ? 'bg-blue-600/15 border border-blue-500/35 text-blue-400 font-black shadow-inner'
                   : 'text-slate-450 hover:text-slate-200'
               }`}
             >
@@ -332,11 +320,11 @@ export default function AuthScreen({
               ) : (
                 /* SIGN UP FORM */
                 <form onSubmit={handleSignUp} className="space-y-4 pt-2">
-                  {/* Promo welcome 500 banner */}
-                  <div className="p-3 bg-purple-950/30 border border-purple-900/40 rounded-2xl flex gap-2.5 items-start">
-                    <Gift className="w-4.5 h-4.5 text-purple-400 shrink-0 mt-0.5 animate-pulse" />
-                    <p className="text-[11px] text-purple-300 font-bold leading-relaxed">
-                      XENA INVESTMENT LTD <strong className="text-white">Naira Welcome Reward</strong>: Sign up now to receive an instant <strong className="text-amber-400">₦500.00 welcome bonus booster</strong> credited directly to your shareholder balance!
+                  {/* Promo welcome XNC banner */}
+                  <div className="p-3 bg-blue-950/30 border border-blue-900/40 rounded-2xl flex gap-2.5 items-start">
+                    <Gift className="w-4.5 h-4.5 text-blue-400 shrink-0 mt-0.5 animate-pulse" />
+                    <p className="text-[11px] text-blue-350 font-bold leading-relaxed">
+                      Xena Premium Wealth <strong className="text-white">Xena Coin Reward</strong>: Sign up now to receive an instant <strong className="text-blue-400">500.0000 XNC welcome coin bonus</strong> credited directly to your digital asset vault!
                     </p>
                   </div>
 

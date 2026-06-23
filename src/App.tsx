@@ -1752,14 +1752,13 @@ export default function App() {
     setWallet((prev) => {
       const next = {
         ...prev,
-        walletBalance: prev.walletBalance + 500,
-        earnedBalance: prev.earnedBalance + 500,
+        xenaBalance: (prev.xenaBalance || 0) + 500,
         hasClaimedBonus: true
       };
 
       // Sync into registeredUsers list
       setRegisteredUsers((prevUsers) =>
-        prevUsers.map((u) => (u.email.toLowerCase() === prev.email.toLowerCase() ? { ...u, walletBalance: next.walletBalance, earnedBalance: next.earnedBalance, hasClaimedBonus: true } : u))
+        prevUsers.map((u) => (u.email.toLowerCase() === prev.email.toLowerCase() ? { ...u, xenaBalance: next.xenaBalance, hasClaimedBonus: true } : u))
       );
 
       return next;
@@ -1773,7 +1772,7 @@ export default function App() {
         status: 'completed',
         date: simulatedTime,
         reference: generateRef(),
-        description: 'XENA Shareholder Registration welcome booster bonus settled',
+        description: 'XENA Registration welcome coin token booster settled (+500 XNC)',
         userEmail: wallet.email
       },
       ...prevTx
@@ -2119,8 +2118,8 @@ export default function App() {
               </div>
               <div className="mt-3.5 pt-3 border-t border-slate-900 flex justify-between items-center text-[10px] text-zinc-400">
                 <span className="font-mono">User: {wallet.fullName?.split(' ')[0]}</span>
-                <span className="font-mono text-emerald-450 font-extrabold flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" /> Active Node
+                <span className="font-mono text-blue-400 font-extrabold flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" /> Active Node
                 </span>
               </div>
             </div>
@@ -2208,7 +2207,7 @@ export default function App() {
                 <span className="inline-flex items-center px-2.5 py-1 rounded bg-slate-100 text-slate-600 text-[8.5px] font-bold uppercase tracking-wider font-mono">
                   ● SECURE SYSTEM
                 </span>
-                <span className="inline-flex items-center px-2.5 py-1 rounded bg-emerald-50 text-emerald-700 text-[8.5px] font-black uppercase tracking-wider font-mono">
+                <span className="inline-flex items-center px-2.5 py-1 rounded bg-blue-50/10 text-blue-450 text-[8.5px] font-black uppercase tracking-wider font-mono">
                   ● CBN VERIFIED
                 </span>
               </div>
@@ -2219,7 +2218,7 @@ export default function App() {
 
             {/* Pr            {/* Premium 5-Level Daily Referral Commission Matrix */}
             <div className="bg-[#0b0e14] border border-slate-800/80 rounded-2xl p-5 shadow-2xl relative overflow-hidden text-left">
-              <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/5 rounded-full blur-[100px] pointer-events-none" />
+              <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/5 rounded-full blur-[100px] pointer-events-none" />
               
               <div className="relative z-10 space-y-4">
                 {(() => {
@@ -2270,18 +2269,18 @@ export default function App() {
                     <>
                       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-slate-800/50">
                         <div className="space-y-0.5">
-                          <span className="text-[8.5px] bg-emerald-400/10 border border-emerald-500/25 text-emerald-400 font-extrabold uppercase px-2 py-0.5 rounded-md tracking-wider font-mono">
+                          <span className="text-[8.5px] bg-blue-400/10 border border-blue-500/25 text-blue-400 font-extrabold uppercase px-2 py-0.5 rounded-md tracking-wider font-mono">
                             XENA PARTNER NETWORKS
                           </span>
                           <h3 className="text-sm font-black text-white font-sans flex items-center gap-1.5 mt-1">
-                            <Sparkles className="w-4 h-4 text-emerald-400" />
+                            <Sparkles className="w-4 h-4 text-blue-400" />
                             Dynamic Shareholder Dividends Network
                           </h3>
                         </div>
                         <div className="bg-black/35 border border-slate-800 px-3 py-1.5 rounded-lg font-mono text-[10px] flex items-center gap-1.5 shrink-0 self-start md:self-auto">
-                          <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                          <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
                           <span className="text-zinc-400 font-bold">TOTAL COMMISSIONS:</span>
-                          <strong className="text-emerald-400 font-extrabold">{totalNetworkCount} MEMBERS</strong>
+                          <strong className="text-blue-400 font-extrabold">{totalNetworkCount} MEMBERS</strong>
                         </div>
                       </div>
 
@@ -2300,12 +2299,12 @@ export default function App() {
                               }`}
                             >
                               <div className="flex items-center gap-2">
-                                <span className={`w-7 h-7 rounded-lg flex items-center justify-center font-mono font-black text-xs ${isUnlocked ? 'bg-emerald-500/10 text-emerald-450' : 'bg-slate-800 text-slate-500'}`}>
+                                <span className={`w-7 h-7 rounded-lg flex items-center justify-center font-mono font-black text-xs ${isUnlocked ? 'bg-blue-500/10 text-blue-400' : 'bg-slate-800 text-slate-500'}`}>
                                   L{lv.level}
                                 </span>
                                 <div className="flex flex-col text-left">
                                   <span className="text-[10px] font-extrabold text-slate-205 leading-none">{lv.name}</span>
-                                  <span className={`text-[9px] font-bold font-mono tracking-tight mt-0.5 ${isUnlocked ? 'text-emerald-400' : 'text-slate-500'}`}>
+                                  <span className={`text-[9px] font-bold font-mono tracking-tight mt-0.5 ${isUnlocked ? 'text-blue-400' : 'text-slate-500'}`}>
                                     +{lv.rate}
                                   </span>
                                 </div>
@@ -2313,7 +2312,7 @@ export default function App() {
                               
                               <div className="text-right leading-none shrink-0">
                                 <span className="text-[10px] font-mono text-slate-300 font-extrabold block">{lv.current}/{lv.req}</span>
-                                <span className={`text-[8px] font-black font-sans tracking-tight uppercase block mt-1 ${isUnlocked ? 'text-emerald-400' : 'text-slate-500'}`}>
+                                <span className={`text-[8px] font-black font-sans tracking-tight uppercase block mt-1 ${isUnlocked ? 'text-blue-400' : 'text-slate-500'}`}>
                                   {isUnlocked ? 'OK' : '🔒 LOCK'}
                                 </span>
                               </div>
@@ -2322,8 +2321,8 @@ export default function App() {
                         })}
                       </div>
 
-                      <div className="p-2.5 bg-emerald-950/20 border border-emerald-900/20 text-emerald-400 font-sans font-medium text-[9.5px] rounded-xl flex items-center gap-2">
-                        <span className="shrink-0 p-0.5 px-1 bg-emerald-500/10 border border-emerald-500/20 rounded font-bold">⚡ RULES</span>
+                      <div className="p-2.5 bg-blue-950/20 border border-blue-900/20 text-blue-450 font-sans font-medium text-[9.5px] rounded-xl flex items-center gap-2">
+                        <span className="shrink-0 p-0.5 px-1 bg-blue-500/10 border border-blue-500/20 rounded font-bold">⚡ RULES</span>
                         Recursively earn bonus shares up to Level 5 overrides. Expand active referral counts to unlock advanced tiers.
                       </div>
                     </>
@@ -2333,44 +2332,44 @@ export default function App() {
             </div>
                      {/* Claim Welcome Bonus Banner */}
             {!wallet.hasClaimedBonus ? (
-              <div id="bonus-claim-callout" className="bg-gradient-to-r from-purple-600 to-purple-950 border border-purple-200 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-md text-white relative overflow-hidden animate-pulse">
+              <div id="bonus-claim-callout" className="bg-gradient-to-r from-blue-600 to-blue-950 border border-blue-250 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-md text-white relative overflow-hidden animate-pulse">
                 <div className="flex items-center gap-4">
-                  <div className="p-3 bg-amber-500 rounded-xl text-white shadow-md shadow-amber-500/20 shrink-0">
+                  <div className="p-3 bg-blue-500 rounded-xl text-white shadow-md shadow-blue-500/20 shrink-0">
                     <Gift className="w-6 h-6" />
                   </div>
                   <div className="space-y-1 font-sans">
-                    <h3 className="font-extrabold text-amber-300 text-sm flex flex-wrap items-center gap-2">
+                    <h3 className="font-extrabold text-blue-300 text-sm flex flex-wrap items-center gap-2">
                       XENA Shareholder Welcome Offer
-                      <span className="px-2 py-0.5 bg-purple-900 border border-purple-800 text-purple-100 rounded-md text-[10px] font-black uppercase tracking-wider">
-                        ₦500.00 Awaiting
+                      <span className="px-2 py-0.5 bg-blue-900 border border-blue-800 text-blue-100 rounded-md text-[10px] font-black uppercase tracking-wider">
+                        500 XNC Awaiting
                       </span>
                     </h3>
-                    <p className="text-xs text-purple-100 leading-relaxed font-semibold">
-                      Your shareholder profile is active, but your balance starts at ₦0.00. Claim your <span className="font-bold text-amber-300">₦500.00 free welcome booster credit</span> to initialize your dividend treasury.
+                    <p className="text-xs text-blue-100 leading-relaxed font-semibold">
+                      Your shareholder profile is active. Claim your <span className="font-bold text-blue-300">500.0000 XNC welcome coin token booster</span> to initialize your digital asset treasury.
                     </p>
                   </div>
                 </div>
                 <button
                   id="btn-claim-bonus"
                   onClick={handleClaimBonus}
-                  className="px-5 py-2.5 bg-yellow-400 hover:bg-yellow-500 text-slate-950 border border-yellow-300 font-black text-xs rounded-xl shadow-md transition-all hover:scale-[1.01] cursor-pointer shrink-0"
+                  className="px-5 py-2.5 bg-blue-400 hover:bg-blue-500 text-slate-950 border border-blue-300 font-black text-xs rounded-xl shadow-md transition-all hover:scale-[1.01] cursor-pointer shrink-0"
                 >
-                  Claim ₦500 Cash Bonus Now 🎁
+                  Claim 500 XNC Bonus Now 🎁
                 </button>
               </div>
             ) : (
               <div className="bg-[#0b0e14] border border-slate-800/80 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm relative overflow-hidden">
-                <span className="absolute top-0 right-0 p-1 bg-emerald-600 text-white font-black text-[8px] uppercase tracking-widest rotate-6 translate-x-2 translate-y-1 text-center font-mono py-0.5 px-3">
+                <span className="absolute top-0 right-0 p-1 bg-blue-600 text-white font-black text-[8px] uppercase tracking-widest rotate-6 translate-x-2 translate-y-1 text-center font-mono py-0.5 px-3">
                   COMPLETED
                 </span>
                 <div className="flex items-center gap-4">
-                  <div className="p-3 bg-emerald-950/40 rounded-xl text-emerald-450 border border-emerald-900/30 shrink-0">
+                  <div className="p-3 bg-blue-950/40 rounded-xl text-blue-400 border border-blue-900/30 shrink-0">
                     <CheckCircle className="w-6 h-6" />
                   </div>
                   <div className="space-y-1 font-sans">
                     <h3 className="font-extrabold text-white text-sm flex flex-wrap items-center gap-2">
                       XENA Shareholder Program
-                      <span className="px-2 py-0.5 bg-emerald-950 text-emerald-400 rounded-md text-[10px] font-black uppercase tracking-wider">
+                      <span className="px-2 py-0.5 bg-blue-950 text-blue-400 rounded-md text-[10px] font-black uppercase tracking-wider">
                         Shareholder Vault Active
                       </span>
                     </h3>
@@ -2466,7 +2465,7 @@ export default function App() {
                           href={getWhatsAppShareUrl()}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-[#128C7E] hover:bg-[#075E54] active:scale-95 border border-emerald-500/30 text-white font-black text-[10px] uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-md text-left font-sans"
+                          className="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-blue-600 hover:bg-blue-700 active:scale-95 border border-blue-500/30 text-white font-black text-[10px] uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-md text-left font-sans"
                         >
                           <Share2 className="w-3.5 h-3.5" />
                           <span>Share WhatsApp</span>
@@ -2484,7 +2483,7 @@ export default function App() {
                       </div>
                       <div className="text-left border-l border-white/10 pl-3.5 font-sans">
                         <span className="text-[9px] uppercase tracking-widest text-slate-400 font-bold block text-left">Paid Accruals</span>
-                        <span className="text-sm font-black font-mono text-emerald-400 block mt-0.5 text-left">
+                        <span className="text-sm font-black font-mono text-blue-400 block mt-0.5 text-left">
                           {formatNGN(wallet.referralEarnings)}
                         </span>
                       </div>
@@ -2494,20 +2493,20 @@ export default function App() {
 
                 {/* Audit and Security trust widget */}
                 <div className="bg-[#0b0e14] border border-slate-800/80 rounded-2xl p-5 md:p-6 shadow-sm space-y-4">
-                  <span className="text-[9px] font-bold text-emerald-400 bg-emerald-950/40 border border-emerald-900/30 px-2.5 py-1 rounded-full inline-block">
+                  <span className="text-[9px] font-bold text-blue-400 bg-blue-950/40 border border-blue-900/30 px-2.5 py-1 rounded-full inline-block">
                     Licensed Escrow Safe Guarantee
                   </span>
                   
                   <div className="space-y-3">
-                    <h4 className="font-bold text-white leading-tight">Global Market Maker Liquidity Guarantee</h4>
-                    <p className="text-xs text-slate-400 leading-relaxed font-semibold">
-                      Underpinned by liquidity pool allocations in first-tier global tech shares. Positions correspond to licensed local broker holdings across international equities.
-                    </p>
+                     <h4 className="font-bold text-white leading-tight">Global Market Maker Liquidity Guarantee</h4>
+                     <p className="text-xs text-slate-400 leading-relaxed font-semibold">
+                       Underpinned by liquidity pool allocations in first-tier global tech shares. Positions correspond to licensed local broker holdings across international equities.
+                     </p>
                   </div>
 
                   <div className="pt-3 border-t border-slate-800/60 space-y-2 text-[11px] text-slate-300 font-bold uppercase tracking-wider">
                     <div className="flex items-center gap-2"><Lock className="w-3.5 h-3.5 text-blue-400" /> NIBSS & Paystack Gateway Security</div>
-                    <div className="flex items-center gap-2"><CheckCircle className="w-3.5 h-3.5 text-emerald-450" /> SEC Registered Corporate Shares</div>
+                    <div className="flex items-center gap-2"><CheckCircle className="w-3.5 h-3.5 text-blue-400" /> SEC Registered Corporate Shares</div>
                     <div className="flex items-center gap-2"><ShieldCheck className="w-3.5 h-3.5 text-blue-400" /> Global Equity Board Audit Approved</div>
                   </div>
                 </div>
@@ -2525,7 +2524,7 @@ export default function App() {
                     System Preference
                   </span>
                   {wallet.autoInvest !== false ? (
-                    <span className="p-0.5 px-2 bg-emerald-600 text-white text-[9px] font-bold uppercase rounded-md animate-pulse">
+                    <span className="p-0.5 px-2 bg-blue-600 text-white text-[9px] font-bold uppercase rounded-md animate-pulse">
                       ACTIVE & COMpounding
                     </span>
                   ) : (
@@ -2648,9 +2647,9 @@ export default function App() {
                       </h4>
                     </div>
                   </div>
-                  <div className="bg-emerald-950/40 border border-emerald-900/30 rounded-xl px-3 py-1.5 text-left md:text-right shrink-0">
-                    <span className="text-[8px] uppercase font-semibold text-emerald-405 block">Registration Commission</span>
-                    <span className="text-xs font-black text-emerald-400 font-mono">₦500.00 / Activation</span>
+                  <div className="bg-blue-950/40 border border-blue-900/30 rounded-xl px-3 py-1.5 text-left md:text-right shrink-0">
+                    <span className="text-[8px] uppercase font-semibold text-blue-400 block">Registration Commission</span>
+                    <span className="text-xs font-black text-blue-400 font-mono">₦500.00 / Activation</span>
                   </div>
                 </div>
 
@@ -2738,17 +2737,17 @@ export default function App() {
                   {/* Level 5 Diamond */}
                   <div className="relative group transition-transform hover:translate-x-1 duration-200">
                     <span className="absolute -left-[23px] md:-left-[27px] top-[18px] w-3.5 h-3.5 rounded-full bg-cyan-400 border-4 border-cyan-200 shadow-lg animate-pulse" />
-                    <div className="bg-gradient-to-r from-cyan-500/5 via-teal-500/5 to-emerald-500/5 p-4 rounded-2xl border border-cyan-500/30 hover:border-cyan-500 flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-all shadow-md">
+                    <div className="bg-gradient-to-r from-cyan-500/5 via-blue-500/5 to-blue-500/5 p-4 rounded-2xl border border-cyan-500/30 hover:border-cyan-500 flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-all shadow-md">
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="text-[11px] font-black text-cyan-800 uppercase tracking-wider font-sans">LEVEL 5 • COGNITIVE DIAMOND EXECUTIVE</span>
-                          <span className="px-2 py-0.5 text-[8.5px] font-black uppercase rounded bg-gradient-to-r from-cyan-500 to-emerald-500 text-white shadow-sm font-mono">Apex Tier Active</span>
+                          <span className="px-2 py-0.5 text-[8.5px] font-black uppercase rounded bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-sm font-mono">Apex Tier Active</span>
                         </div>
                         <p className="text-[10px] text-slate-500 font-bold mt-1">Encompasses physical advisory roundtables and heavy 5% dividend boost.</p>
                       </div>
-                      <div className="bg-gradient-to-br from-cyan-500 to-emerald-600 text-white shadow-lg border border-cyan-300 px-3 py-1.5 rounded-xl shrink-0 text-center sm:text-right">
+                      <div className="bg-gradient-to-br from-cyan-500 to-blue-600 text-white shadow-lg border border-cyan-300 px-3 py-1.5 rounded-xl shrink-0 text-center sm:text-right">
                         <span className="text-xs font-black font-mono uppercase block leading-none">+0.5% DAILY</span>
-                        <span className="text-[7.5px] font-black text-cyan-50 uppercase tracking-wider block mt-0.5">Yield Multiplier</span>
+                        <span className="text-[7.5px] font-black text-cyan-55 uppercase tracking-wider block mt-0.5">Yield Multiplier</span>
                       </div>
                     </div>
                   </div>
@@ -2758,7 +2757,7 @@ export default function App() {
                 <div className="bg-[#070a0f] border border-slate-800/80 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-4">
                   <div className="space-y-0.5">
                     <span className="text-[9px] font-bold uppercase text-slate-400 tracking-wider">Your Referral Invite Link</span>
-                    <p className="text-xs font-bold text-emerald-400 font-mono">{adminApprovalSettings.customReferralLink || `https://xenainvestment.com/join?ref=${wallet.referralCode}`}</p>
+                    <p className="text-xs font-bold text-blue-400 font-mono">{adminApprovalSettings.customReferralLink || `https://xenainvestment.com/join?ref=${wallet.referralCode}`}</p>
                   </div>
                   <button 
                     onClick={() => {
@@ -2766,7 +2765,7 @@ export default function App() {
                       navigator.clipboard.writeText(shareLink);
                       alert('Affiliate link successfully copied to your system clipboard!');
                     }}
-                    className="px-4 py-2 bg-emerald-950/40 hover:bg-emerald-900/40 text-emerald-400 font-black tracking-wider text-[10px] uppercase rounded-xl border border-emerald-900/30 transition-colors cursor-pointer flex items-center justify-center gap-1"
+                    className="px-4 py-2 bg-blue-950/40 hover:bg-blue-900/40 text-blue-400 font-black tracking-wider text-[10px] uppercase rounded-xl border border-blue-900/30 transition-colors cursor-pointer flex items-center justify-center gap-1"
                   >
                     <Copy className="w-3.5 h-3.5" /> Copy Link
                   </button>
@@ -2846,13 +2845,13 @@ export default function App() {
                       <motion.div 
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="p-3 bg-emerald-950/60 border border-emerald-500/30 text-emerald-300 rounded-xl space-y-2 text-center"
+                        className="p-3 bg-blue-950/60 border border-blue-500/30 text-blue-300 rounded-xl space-y-2 text-center"
                       >
-                        <span className="block text-xs font-black text-emerald-300">🎉 CONVERSION SUCCESSFUL</span>
+                        <span className="block text-xs font-black text-blue-300">🎉 CONVERSION SUCCESSFUL</span>
                         <p className="text-[10px] leading-relaxed font-semibold">{swapSuccessMessage}</p>
                         <button 
                           onClick={() => setSwapSuccessMessage('')}
-                          className="mt-1 px-3 py-1 bg-emerald-500 hover:bg-emerald-600 text-black text-[9px] uppercase font-black rounded-lg transition-colors cursor-pointer"
+                          className="mt-1 px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-[9px] uppercase font-black rounded-lg transition-colors cursor-pointer"
                         >
                           Perform New Swap
                         </button>
@@ -2943,7 +2942,7 @@ export default function App() {
 
                 <div className="border-t border-white/10 pt-4 mt-6 flex justify-between items-center text-[9px] text-zinc-500 font-extrabold uppercase font-mono relative">
                   <span>TOKEN TICKER: XNC</span>
-                  <span className="text-emerald-400 animate-pulse flex items-center gap-1">🟢 STATUS: LIQUIDITY LISTING POOLED</span>
+                  <span className="text-blue-400 animate-pulse flex items-center gap-1">🔵 STATUS: LIQUIDITY LISTING POOLED</span>
                 </div>
               </div>
 
@@ -3031,7 +3030,7 @@ export default function App() {
                       <div className="w-10 h-10 rounded-xl bg-blue-600 text-white font-bold flex items-center justify-center">
                         BA
                       </div>
-                      <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-550 border-2 border-[#0d121c] rounded-full animate-pulse" />
+                      <span className="absolute bottom-0 right-0 w-3 h-3 bg-blue-500 border-2 border-[#0d121c] rounded-full animate-pulse" />
                     </div>
                     <div>
                       <h4 className="font-bold text-white text-xs">Blessing Adebayo</h4>
@@ -3039,7 +3038,7 @@ export default function App() {
                     </div>
                   </div>
                   
-                  <span className="text-[10px] text-emerald-400 bg-emerald-950/40 border border-emerald-900/30 px-2.5 py-1 rounded-lg font-black uppercase tracking-wider font-mono">
+                  <span className="text-[10px] text-blue-400 bg-blue-950/40 border border-blue-900/30 px-2.5 py-1 rounded-lg font-black uppercase tracking-wider font-mono">
                     ● Active Now
                   </span>
                 </div>
@@ -3155,10 +3154,10 @@ export default function App() {
                         href={adminApprovalSettings.officialWhatsAppGroup} 
                         target="_blank" 
                         rel="noopener noreferrer"
-                        className="flex items-center justify-between p-3 border border-emerald-900/30 bg-emerald-950/20 hover:bg-emerald-950/40 rounded-xl transition-all cursor-pointer group"
+                        className="flex items-center justify-between p-3 border border-blue-900/30 bg-blue-950/20 hover:bg-blue-950/40 rounded-xl transition-all cursor-pointer group"
                       >
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 bg-emerald-950 border border-emerald-900/30 rounded-lg text-emerald-450 flex items-center justify-center font-bold">
+                          <div className="w-9 h-9 bg-blue-950 border border-blue-900/30 rounded-lg text-blue-400 flex items-center justify-center font-bold">
                             <Share2 className="w-4 h-4" />
                           </div>
                           <div>
@@ -3166,7 +3165,7 @@ export default function App() {
                             <p className="text-[10px] text-slate-400 font-semibold">Join thousands of active shareholders live</p>
                           </div>
                         </div>
-                        <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-emerald-400 transition-colors" />
+                        <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-blue-400 transition-colors" />
                       </a>
                     )}
 
@@ -3216,11 +3215,11 @@ export default function App() {
                   </div>
 
                   {ticketSuccessInfo ? (
-                    <div className="p-3 bg-emerald-950/20 border border-emerald-900/30 text-emerald-400 text-xs rounded-xl font-bold space-y-2 animate-fade-in">
+                    <div className="p-3 bg-blue-950/20 border border-blue-900/30 text-blue-400 text-xs rounded-xl font-bold space-y-2 animate-fade-in">
                       <p>{ticketSuccessInfo}</p>
                       <button 
                         onClick={() => setTicketSuccessInfo('')}
-                        className="text-[10px] underline hover:text-emerald-350 font-black tracking-widest uppercase block cursor-pointer"
+                        className="text-[10px] underline hover:text-blue-300 font-black tracking-widest uppercase block cursor-pointer"
                       >
                         Dismiss & Create new
                       </button>
@@ -3263,7 +3262,7 @@ export default function App() {
 
                       <button
                         type="submit"
-                        className="w-full py-2.5 bg-emerald-950/40 hover:bg-emerald-900/40 text-emerald-400 border border-emerald-900/30 text-xs font-bold rounded-xl transition-all cursor-pointer"
+                        className="w-full py-2.5 bg-blue-950/40 hover:bg-blue-900/40 text-blue-400 border border-blue-900/30 text-xs font-bold rounded-xl transition-all cursor-pointer"
                       >
                         Submit priority ticket request
                       </button>
@@ -3297,7 +3296,7 @@ export default function App() {
                           <div className="flex items-center justify-between">
                             <span className={`text-[9px] uppercase px-2 py-0.5 rounded-md font-bold tracking-wider ${
                               ticket.status === 'resolved'
-                                ? 'bg-emerald-950 text-emerald-400 border border-emerald-900/30'
+                                ? 'bg-blue-950 text-blue-400 border border-blue-900/30'
                                 : 'bg-amber-950/40 text-amber-500 border border-amber-900/40'
                             }`}>
                               {ticket.status}
@@ -3385,7 +3384,7 @@ export default function App() {
                                 <span className="text-[10px] font-mono font-black text-slate-500">{t.id}</span>
                                 <span className={`text-[9px] uppercase px-2 py-0.5 rounded-md font-bold tracking-wider ${
                                   t.status === 'resolved'
-                                    ? 'bg-emerald-950 text-emerald-450 border border-emerald-900/30'
+                                    ? 'bg-blue-950 text-blue-400 border border-blue-900/30'
                                     : 'bg-amber-950/40 text-amber-500 border border-amber-900/40 animate-pulse'
                                 }`}>
                                   {t.status}
@@ -3524,8 +3523,8 @@ export default function App() {
       />
 
       {/* Premium Floating Bottom Navigation Dock (Visible on Desktop & Mobile) */}
-      <div className="fixed bottom-0 sm:bottom-6 left-0 sm:left-1/2 sm:-translate-x-1/2 w-full sm:max-w-2xl bg-[#0c1222]/98 backdrop-blur-lg border-t sm:border border-slate-700/80 z-50 px-1.5 sm:px-4 py-2 sm:py-3 shadow-[0_12px_45px_rgba(0,0,0,0.9),0_0_25px_rgba(99,102,241,0.22)] sm:rounded-2xl overflow-x-auto scrollbar-none">
-        <div className="flex justify-between sm:justify-around items-center min-w-max sm:min-w-0 w-full gap-1 sm:gap-2 px-1">
+      <div className="fixed bottom-0 sm:bottom-6 left-0 sm:left-1/2 sm:-translate-x-1/2 w-full sm:max-w-2xl bg-[#0c1222] border-t-2 border-t-blue-500 sm:border border-slate-750 z-50 px-1 sm:px-4 py-2 sm:py-3 shadow-[0_12px_45px_rgba(0,0,0,0.95),0_0_25px_rgba(59,130,246,0.3)] sm:rounded-2xl">
+        <div className={`grid ${isAdmin ? 'grid-cols-7' : 'grid-cols-6'} sm:flex sm:justify-around items-center w-full gap-0.5 sm:gap-2 px-0.5`}>
           {[
             { name: 'Portfolio', id: 'dashboard', icon: Landmark },
             { name: 'Shares', id: 'invest', icon: Compass },
@@ -3545,14 +3544,14 @@ export default function App() {
                   setActiveTab(tab.id as any);
                   setIsMobileMenuOpen(false);
                 }}
-                className={`flex-1 sm:flex-initial flex flex-col items-center gap-1 py-1 px-2.5 sm:px-4 rounded-xl transition-all cursor-pointer border text-center group whitespace-nowrap ${
+                className={`flex flex-col items-center gap-0.5 py-1 px-0.5 sm:px-4 rounded-xl transition-all cursor-pointer border text-center group ${
                   isActive 
-                    ? 'bg-indigo-550/15 border-indigo-500/40 text-cyan-400 shadow-[0_0_12px_rgba(99,102,241,0.25)]' 
-                    : 'border-transparent text-slate-250 hover:text-white hover:bg-slate-800/40'
+                    ? 'bg-blue-600/15 border-blue-500/40 text-blue-400 shadow-[0_0_12px_rgba(59,130,246,0.25)]' 
+                    : 'border-transparent text-slate-400 hover:text-white hover:bg-slate-800/40'
                 }`}
               >
-                <Icon className={`w-4.5 h-4.5 sm:w-5 sm:h-5 transition-transform ${isActive ? 'text-cyan-450 scale-110 drop-shadow-[0_0_5px_rgba(34,211,238,0.7)]' : 'text-slate-300 group-hover:text-white'}`} />
-                <span className={`text-[7.5px] sm:text-[9.5px] uppercase tracking-wider font-extrabold mt-0.5 ${isActive ? 'text-cyan-300' : 'text-slate-400 font-bold'}`}>
+                <Icon className={`w-4 h-4 sm:w-5 sm:h-5 transition-transform ${isActive ? 'text-blue-400 scale-110 drop-shadow-[0_0_5px_rgba(59,130,246,0.7)]' : 'text-slate-400 group-hover:text-white'}`} />
+                <span className={`text-[7px] sm:text-[9.5px] uppercase tracking-wider font-extrabold mt-0.5 ${isActive ? 'text-blue-300' : 'text-slate-400 font-bold'}`}>
                   {tab.name}
                 </span>
               </button>
