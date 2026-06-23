@@ -1,0 +1,119 @@
+export interface UserWallet {
+  walletBalance: number;
+  investedBalance: number;
+  withdrawnBalance: number;
+  earnedBalance: number;
+  accountNumber: string;
+  fullName: string;
+  email: string;
+  referralCode: string;
+  referralsCount: number;
+  referralEarnings: number;
+  isFlagged?: boolean;
+  requireReferralToWithdraw?: boolean;
+  requireReferralDepositToWithdraw?: boolean;
+  hasClaimedBonus?: boolean;
+  password?: string;
+  referredBy?: string;
+  autoInvest?: boolean;
+  approvedLevel?: 'Bronze' | 'Silver' | 'Gold' | 'Platinum' | 'Diamond';
+  pendingLevelUpgrade?: 'Bronze' | 'Silver' | 'Gold' | 'Platinum' | 'Diamond';
+  xenaBalance?: number;
+  usdtBalance?: number;
+  solBalance?: number;
+  btcBalance?: number;
+  ethBalance?: number;
+  bnbBalance?: number;
+  uid?: string;
+  loginStreak?: number;
+  lastLoginDate?: string;
+}
+
+export interface InvestmentProduct {
+  id: string;
+  name: string;
+  description: string;
+  minAmount: number;
+  maxAmount: number;
+  rate: number; // e.g. 0.10 for 10%
+  termDays: number; // e.g. 3
+  riskLevel: 'Low' | 'Moderate' | 'High';
+  category: string;
+}
+
+export interface ActiveInvestment {
+  id: string;
+  productId: string;
+  productName: string;
+  amountInvested: number;
+  startDate: number; // unix ms
+  endDate: number; // unix ms
+  lastAccrualTime: number; // last time interest was collected
+  status: 'pending' | 'active' | 'matured' | 'withdrawn' | 'cancelled';
+  totalAccrued: number; // how much has been generated so far
+  expectedReturn: number; // standard 15% return amount
+  isCompounding: boolean;
+  userEmail?: string;
+  termDays?: number;
+  rate?: number;
+}
+
+export interface Transaction {
+  id: string;
+  type: 'deposit' | 'withdraw' | 'invest' | 'payout' | 'refund' | 'swap';
+  amount: number;
+  status: 'completed' | 'pending' | 'failed';
+  date: number; // unix ms
+  reference: string;
+  description: string;
+  userEmail?: string;
+}
+
+export interface TicketMessage {
+  id: string;
+  sender: 'user' | 'agent' | 'admin';
+  senderName: string;
+  text: string;
+  date: number;
+}
+
+export interface SupportTicket {
+  id: string;
+  userEmail: string;
+  userFullName: string;
+  category: string;
+  subject: string;
+  status: 'pending' | 'resolved';
+  date: number;
+  messages: TicketMessage[];
+}
+
+export interface DepositAccount {
+  id: string;
+  bankName: string;
+  accountName: string;
+  accountNumber: string;
+  isActive: boolean;
+}
+
+export interface ReferralRelationship {
+  id: string;
+  referrerEmail: string;
+  referrerCode: string;
+  referredEmail: string;
+  referredName: string;
+  amount: number;
+  status: 'pending' | 'approved' | 'rejected';
+  date: number;
+}
+
+export interface BonusCode {
+  id: string;
+  code: string;
+  rewardAmount: number;
+  maxClaims: number;
+  claimedBy: string[]; // List of user emails who claimed it
+  isActive: boolean;
+  createdAt: number;
+}
+

@@ -1,0 +1,8 @@
+{
+  "name": "XENA INVESTMENT LTD",
+  "description": "Premium corporate company shares including Apple, Samsung, Nvidia, Tesla, Microsoft, and Alphabet.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
