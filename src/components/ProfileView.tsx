@@ -20,7 +20,9 @@ import {
   Shield,
   Fingerprint,
   QrCode,
-  ArrowRightLeft
+  ArrowRightLeft,
+  Globe,
+  FileText
 } from 'lucide-react';
 import { UserWallet, ReferralRelationship } from '../types';
 import { motion } from 'motion/react';
@@ -127,9 +129,16 @@ export default function ProfileView({
   // Referral link copying & promotional script variables
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedMsg, setCopiedMsg] = useState(false);
+  const [copiedUid, setCopiedUid] = useState(false);
 
   // Computed User UID
-  const computedUid = wallet.uid || `XNC-${wallet.referralCode}`;
+  const computedUid = wallet.uid || `XENA-${wallet.referralCode?.split('-').pop() || '49104'}`;
+
+  const handleCopyUid = () => {
+    navigator.clipboard.writeText(computedUid);
+    setCopiedUid(true);
+    setTimeout(() => setCopiedUid(false), 2000);
+  };
 
   const getReferralLink = () => {
     const link = adminApprovalSettings?.customReferralLink;
@@ -251,20 +260,20 @@ export default function ProfileView({
       {/* Header Panel */}
       <div className="relative overflow-hidden rounded-3xl bg-zinc-900 border border-zinc-800 p-6 md:p-8">
         {/* Subtle background glow */}
-        <div className="absolute top-[-20%] right-[-10%] w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-[-30%] left-[-10%] w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-[-20%] right-[-10%] w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-[-30%] left-[-10%] w-96 h-96 bg-purple-500/5 rounded-full blur-3xl pointer-events-none" />
         
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="flex items-start gap-5">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white flex items-center justify-center font-black text-2xl shadow-xl shadow-purple-950/40 uppercase shrink-0">
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+            <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-black text-3xl shadow-xl shadow-blue-950/40 uppercase shrink-0">
               {wallet.fullName[0]}
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               <div className="flex items-center gap-3 flex-wrap">
-                <h2 className="text-xl md:text-2xl font-black text-white font-sans tracking-tight leading-none">
+                <h2 className="text-2xl md:text-3xl font-black text-white font-sans tracking-tight leading-none">
                   {wallet.fullName}
                 </h2>
-                <span className={`inline-flex items-center gap-1 text-[10px] font-black uppercase rounded-full px-2.5 py-0.5 border ${
+                <span className={`inline-flex items-center gap-1 text-[10px] font-black uppercase rounded-full px-2.5 py-1 border ${
                   wallet.approvedLevel === 'Diamond'
                     ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.1)]'
                     : wallet.approvedLevel === 'Platinum'
@@ -275,47 +284,81 @@ export default function ProfileView({
                     ? 'bg-slate-500/10 border-slate-500/30 text-slate-300'
                     : wallet.approvedLevel === 'Bronze'
                     ? 'bg-orange-500/10 border-orange-500/30 text-orange-400'
-                    : 'bg-zinc-805/40 border-zinc-700 text-zinc-400'
+                    : 'bg-zinc-800/40 border-zinc-700 text-zinc-400'
                 }`}>
-                  <Award className="w-3 h-3" />
+                  <Award className="w-3.5 h-3.5" />
                   {wallet.approvedLevel ? `${wallet.approvedLevel} Partner` : 'Standard Affiliate'}
                 </span>
               </div>
-              <p className="text-xs text-zinc-400 font-mono font-bold">
+              
+              <p className="text-sm text-zinc-400 font-mono font-bold leading-none">
                 {wallet.email}
               </p>
               
-              {/* Unique UID Badge */}
-              <div className="flex items-center gap-2 pt-1">
-                <div className="flex items-center bg-zinc-950 px-2.5 py-1 rounded-lg border border-zinc-800 text-[10.5px] font-mono">
-                  <Fingerprint className="w-3.5 h-3.5 mr-1.5 text-purple-400 shrink-0" />
-                  <span className="text-zinc-400 mr-2 uppercase text-[7.5px] tracking-wider font-sans font-extrabold">System UID:</span>
-                  <span className="font-extrabold text-purple-400 tracking-wider">
-                    {computedUid}
+              {/* Unique Country, and KYC Badges */}
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                <div className="flex items-center bg-zinc-950 px-2.5 py-1 rounded-lg border border-zinc-850 text-[10.5px] font-mono">
+                  <Globe className="w-3.5 h-3.5 mr-1.5 text-blue-400 shrink-0" />
+                  <span className="text-zinc-500 mr-1.5 uppercase text-[7.5px] tracking-wider font-sans font-extrabold">Country:</span>
+                  <span className="font-extrabold text-blue-400">
+                    {wallet.country || 'Nigeria'}
+                  </span>
+                </div>
+
+                <div className="flex items-center bg-zinc-950 px-2.5 py-1 rounded-lg border border-zinc-850 text-[10.5px] font-mono">
+                  <FileText className="w-3.5 h-3.5 mr-1.5 text-blue-400 shrink-0" />
+                  <span className="text-zinc-500 mr-1.5 uppercase text-[7.5px] tracking-wider font-sans font-extrabold">KYC Verified:</span>
+                  <span className="font-extrabold text-blue-400 truncate max-w-[150px]">
+                    {wallet.kycIdType || 'National ID'} ({wallet.kycIdNumber ? wallet.kycIdNumber.replace(/.(?=.{4})/g, '*') : 'A4918239'})
                   </span>
                 </div>
               </div>
             </div>
           </div>
           
-          {/* Quick status cards */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 self-start md:self-center">
-            <div className="h-12 bg-zinc-950 p-3 px-4 rounded-xl border border-zinc-800/80 flex flex-col justify-center text-left min-w-[125px]">
-              <span className="text-[7.5px] uppercase font-bold text-zinc-500 tracking-wider">Active Wallet</span>
-              <span className="text-xs font-mono font-black text-emerald-400 mt-0.5">🟢 Verified Secure</span>
+          {/* Prominent, Extremely Visible XENA Shareholder ID Box */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 shrink-0">
+            <div className="bg-zinc-950/90 border border-blue-500/30 rounded-2xl p-4 flex flex-col justify-center text-left min-w-[240px] relative overflow-hidden shadow-2xl">
+              <div className="absolute top-0 right-0 w-16 h-16 bg-blue-500/5 rounded-full blur-lg pointer-events-none" />
+              <span className="text-[8px] uppercase font-black text-blue-400 tracking-widest block mb-1">
+                XENA Shareholder ID (UID)
+              </span>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-lg font-mono font-black text-white tracking-widest select-all">
+                  {computedUid}
+                </span>
+                <button
+                  onClick={handleCopyUid}
+                  className="p-1.5 bg-blue-500/10 hover:bg-blue-500 text-blue-400 hover:text-zinc-950 rounded-lg border border-blue-500/20 transition-all cursor-pointer"
+                  title="Copy ID"
+                >
+                  {copiedUid ? (
+                    <span className="text-[9px] px-1 font-black uppercase text-blue-400">Copied</span>
+                  ) : (
+                    <Copy className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
+              <span className="text-[7.5px] text-zinc-500 leading-none mt-1.5 block">
+                Use for inter-shareholder matrix transfers & verification.
+              </span>
             </div>
-            <div className="h-12 bg-zinc-950 p-3 px-4 rounded-xl border border-zinc-800/80 flex flex-col justify-center text-left min-w-[110px]">
-              <span className="text-[7.5px] uppercase font-bold text-zinc-500 tracking-wider">Local Server</span>
-              <span className="text-xs font-mono font-black text-purple-400 mt-0.5">🔐 CNC-HS2</span>
+
+            {/* Side Stats & Sign Out */}
+            <div className="flex flex-row sm:flex-col gap-2 justify-stretch">
+              <div className="flex-1 text-center bg-zinc-950/60 p-2.5 px-4 rounded-xl border border-zinc-805 text-left min-w-[120px]">
+                <span className="text-[7.5px] uppercase font-bold text-zinc-500 tracking-wider block">Local Node</span>
+                <span className="text-xs font-mono font-black text-purple-400 block mt-0.5">🔐 CNC-HS2</span>
+              </div>
+              {onLogout && (
+                <button
+                  onClick={onLogout}
+                  className="flex-1 bg-red-950/20 hover:bg-red-900/30 border border-red-900/30 text-red-500 hover:text-red-400 font-extrabold text-xs py-2 px-4 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 uppercase tracking-wide font-mono"
+                >
+                  Sign Out
+                </button>
+              )}
             </div>
-            {onLogout && (
-              <button
-                onClick={onLogout}
-                className="h-12 bg-red-950/20 hover:bg-red-900/30 border border-red-900/30 text-red-500 hover:text-red-400 font-extrabold text-xs px-4 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 self-stretch sm:self-auto uppercase tracking-wide font-mono"
-              >
-                Sign Out
-              </button>
-            )}
           </div>
         </div>
       </div>
@@ -359,7 +402,7 @@ export default function ProfileView({
                 <div className="flex justify-between items-center text-[9px] uppercase font-extrabold tracking-wider block">
                   <span className="text-zinc-400">Shareholder Registration Link</span>
                   {adminApprovalSettings?.customReferralLink && adminApprovalSettings.customReferralLink.trim() !== '' && (
-                    <span className="text-[8px] text-emerald-400 bg-emerald-950/40 border border-emerald-500/20 px-1.5 py-0.5 rounded uppercase">
+                    <span className="text-[8px] text-blue-400 bg-blue-950/40 border border-blue-500/20 px-1.5 py-0.5 rounded uppercase">
                       Admin Configured Link Active
                     </span>
                   )}
@@ -377,7 +420,7 @@ export default function ProfileView({
                     onClick={handleCopyLink}
                     className="p-3 bg-purple-600 hover:bg-purple-700 text-white rounded-2xl transition-all shadow-lg shadow-purple-950/40 shrink-0 cursor-pointer"
                   >
-                    {copiedLink ? <Check className="w-4 h-4 text-emerald-300 stroke-[3]" /> : <Copy className="w-4 h-4" />}
+                    {copiedLink ? <Check className="w-4 h-4 text-blue-300 stroke-[3]" /> : <Copy className="w-4 h-4" />}
                   </motion.button>
                 </div>
               </div>
@@ -403,7 +446,7 @@ export default function ProfileView({
                     onClick={handleCopyMemo}
                     className="flex items-center justify-center gap-1.5 py-2.5 px-3 border border-zinc-800 hover:border-zinc-700 bg-zinc-900/60 text-zinc-300 font-bold text-xs rounded-xl transition-all cursor-pointer"
                   >
-                    {copiedMsg ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-zinc-400" />}
+                    {copiedMsg ? <Check className="w-4 h-4 text-blue-400" /> : <Copy className="w-4 h-4 text-zinc-400" />}
                     <span>{copiedMsg ? "Copied!" : "Copy Pitch"}</span>
                   </motion.button>
                   <motion.a

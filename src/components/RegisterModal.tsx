@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
-import { X, Gift, ShieldAlert, CheckCircle, Landmark, User, Mail, HelpCircle } from 'lucide-react';
+import { X, Gift, ShieldAlert, CheckCircle, Landmark, User, Mail, HelpCircle, Globe, FileText } from 'lucide-react';
 import { formatNGN } from '../utils';
 
 interface RegisterModalProps {
@@ -13,6 +13,9 @@ interface RegisterModalProps {
     accountNumber: string;
     referralUsed: string;
     password?: string;
+    country: string;
+    kycIdType: string;
+    kycIdNumber: string;
   }) => void;
 }
 
@@ -24,8 +27,9 @@ export default function RegisterModal({
 }: RegisterModalProps) {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
-  const [bankName, setBankName] = useState('Access Bank');
-  const [accountNumber, setAccountNumber] = useState('');
+  const [country, setCountry] = useState('Nigeria');
+  const [kycIdType, setKycIdType] = useState('National ID');
+  const [kycIdNumber, setKycIdNumber] = useState('');
   const [password, setPassword] = useState('');
   const [referralCode, setReferralCode] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
@@ -51,8 +55,8 @@ export default function RegisterModal({
       setErrorMsg('Please enter a valid email address.');
       return;
     }
-    if (accountNumber.length !== 10 || isNaN(Number(accountNumber))) {
-      setErrorMsg('Nigerian bank NUBAN account number must be exactly 10 digits.');
+    if (!kycIdNumber.trim() || kycIdNumber.trim().length < 4) {
+      setErrorMsg('Please enter a valid official ID document number (at least 4 characters).');
       return;
     }
     if (password.length < 4) {
@@ -66,16 +70,19 @@ export default function RegisterModal({
       onRegisterSuccess({
         fullName: fullName.trim(),
         email: email.trim(),
-        accountNumber: `NG-ACC-${accountNumber}|${bankName}`,
+        accountNumber: `XENA-VAULT-${Math.floor(100000 + Math.random() * 900000)}`,
         referralUsed: referralCode.trim(),
-        password: password.trim()
+        password: password.trim(),
+        country,
+        kycIdType,
+        kycIdNumber
       });
       setIsSuccess(false);
       onClose();
       // Reset form
       setFullName('');
       setEmail('');
-      setAccountNumber('');
+      setKycIdNumber('');
       setPassword('');
       setReferralCode('');
     }, 2000);
@@ -193,42 +200,62 @@ export default function RegisterModal({
                   />
                 </div>
 
-                {/* Simulated payout bank account */}
-                <div className="grid grid-cols-2 gap-3">
+                {/* Global Sign-up & KYC details */}
+                <div className="space-y-4">
                   <div>
                     <label className="block text-[10px] uppercase font-black text-slate-450 tracking-wider mb-1.5 flex items-center gap-1.5">
-                      <Landmark className="w-3.5 h-3.5 text-slate-400" /> Receiving Bank
+                      <Globe className="w-3.5 h-3.5 text-slate-400" /> Country of Residence
                     </label>
                     <select
-                      value={bankName}
-                      onChange={(e) => setBankName(e.target.value)}
+                      value={country}
+                      onChange={(e) => setCountry(e.target.value)}
                       className="w-full px-3 py-3 bg-slate-50 border border-slate-150 rounded-xl text-xs font-bold focus:outline-none cursor-pointer"
                     >
-                      <option>Access Bank</option>
-                      <option>Zenith Bank</option>
-                      <option>GTBank</option>
-                      <option>UBA Plc</option>
-                      <option>Fidelity Bank</option>
-                      <option>First Bank of Nigeria</option>
-                      <option>OPay</option>
-                      <option>PalmPay</option>
-                      <option>Moniepoint Microfinance</option>
-                      <option>Kuda Bank</option>
+                      <option>Nigeria</option>
+                      <option>Ghana</option>
+                      <option>Kenya</option>
+                      <option>South Africa</option>
+                      <option>United Kingdom</option>
+                      <option>United States</option>
+                      <option>Canada</option>
+                      <option>Germany</option>
+                      <option>United Arab Emirates</option>
+                      <option>India</option>
+                      <option>Australia</option>
+                      <option>Other</option>
                     </select>
                   </div>
-                  <div>
-                    <label className="block text-[10px] uppercase font-black text-slate-450 tracking-wider mb-1.5 flex items-center gap-1">
-                      NUBAN Account
-                    </label>
-                    <input
-                      type="text"
-                      maxLength={10}
-                      required
-                      value={accountNumber}
-                      onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, ''))}
-                      placeholder="10 Digits"
-                      className="w-full px-3.5 py-3 bg-slate-50 border border-slate-150 focus:border-purple-550 focus:bg-white rounded-xl text-xs font-semibold focus:outline-none transition-all"
-                    />
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] uppercase font-black text-slate-450 tracking-wider mb-1.5 flex items-center gap-1.5">
+                        <FileText className="w-3.5 h-3.5 text-slate-400" /> KYC ID Document
+                      </label>
+                      <select
+                        value={kycIdType}
+                        onChange={(e) => setKycIdType(e.target.value)}
+                        className="w-full px-3 py-3 bg-slate-50 border border-slate-150 rounded-xl text-xs font-bold focus:outline-none cursor-pointer"
+                      >
+                        <option>National ID / NIN</option>
+                        <option>International Passport</option>
+                        <option>Driver's License</option>
+                        <option>Voter's Card</option>
+                        <option>Social Security / State ID</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] uppercase font-black text-slate-450 tracking-wider mb-1.5 flex items-center gap-1">
+                        Document ID Number
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={kycIdNumber}
+                        onChange={(e) => setKycIdNumber(e.target.value)}
+                        placeholder="e.g. A12345678"
+                        className="w-full px-3.5 py-3 bg-slate-50 border border-slate-150 focus:border-purple-550 focus:bg-white rounded-xl text-xs font-semibold focus:outline-none transition-all"
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -280,7 +307,7 @@ export default function RegisterModal({
                       className="mt-0.5 h-4 w-4 rounded border-slate-200 text-purple-600 focus:ring-purple-600"
                     />
                     <span className="text-[10px] text-slate-450 font-semibold leading-normal">
-                      I accept the <span className="text-purple-700 font-extrabold underline">Shareholder Terms & Conditions</span>, XENA INVESTMENT LTD investment policies, and confirm my bank details are accurate.
+                      I accept the <span className="text-purple-700 font-extrabold underline">Shareholder Terms & Conditions</span>, XENA INVESTMENT LTD investment policies, and confirm my KYC identity details are accurate.
                     </span>
                   </label>
                 </div>

@@ -6,48 +6,48 @@
   --font-display: "Outfit", var(--font-sans);
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 
-  /* Premium Corporate Brokerage Design System - Pure Emerald, Crimson Red, Charcoal, and Cobalt Blue */
-  --color-emerald-50: #ecfdf5;
-  --color-emerald-100: #d1fae5;
-  --color-emerald-150: #a7f3d0;
-  --color-emerald-200: #a7f3d0;
-  --color-emerald-300: #6ee7b7;
-  --color-emerald-400: #34d399;
-  --color-emerald-505: #10b981;
-  --color-emerald-500: #10b981;
-  --color-emerald-600: #059669;
-  --color-emerald-705: #047857;
-  --color-emerald-700: #047857;
-  --color-emerald-800: #065f46;
-  --color-emerald-900: #064e3b;
-  --color-emerald-950: #022c22;
+  /* Premium Corporate Brokerage Design System - Pure Brand Cyan, Crimson Red, Charcoal, and Cobalt Blue */
+  --color-emerald-50: #ecfeff;
+  --color-emerald-100: #cffafe;
+  --color-emerald-150: #a5f3fc;
+  --color-emerald-200: #a5f3fc;
+  --color-emerald-300: #67e8f9;
+  --color-emerald-400: #22d3ee;
+  --color-emerald-505: #00a3ff;
+  --color-emerald-500: #00a3ff;
+  --color-emerald-600: #0082cc;
+  --color-emerald-705: #006299;
+  --color-emerald-700: #006299;
+  --color-emerald-800: #004b73;
+  --color-emerald-900: #003852;
+  --color-emerald-950: #001f30;
 
-  --color-green-50: #ecfdf5;
-  --color-green-55: #f0fdf4;
-  --color-green-100: #d1fae5;
-  --color-green-105: #bbf7d0;
-  --color-green-150: #86efac;
-  --color-green-200: #86efac;
-  --color-green-205: #4ade80;
-  --color-green-300: #4ade80;
-  --color-green-400: #22c55e;
-  --color-green-500: #10b981;
-  --color-green-600: #059669;
-  --color-green-700: #047857;
-  --color-green-800: #065f46;
-  --color-green-900: #064e3b;
-  --color-green-905: #022c22;
-  --color-green-950: #012d22;
+  --color-green-50: #ecfeff;
+  --color-green-55: #f0fdfa;
+  --color-green-100: #cffafe;
+  --color-green-105: #99f6e4;
+  --color-green-150: #5eead4;
+  --color-green-200: #5eead4;
+  --color-green-205: #2dd4bf;
+  --color-green-300: #2dd4bf;
+  --color-green-400: #14b8a6;
+  --color-green-500: #00a3ff;
+  --color-green-600: #0082cc;
+  --color-green-700: #006299;
+  --color-green-800: #004b73;
+  --color-green-900: #003852;
+  --color-green-905: #001f30;
+  --color-green-950: #00121d;
 
-  --color-brand-green-50: #f0fdf4;
-  --color-brand-green-100: #d1fae5;
-  --color-brand-green-150: #a7f3d0;
-  --color-brand-green-200: #86efac;
-  --color-brand-green-300: #4ade80;
-  --color-brand-green-600: #059669;
-  --color-brand-green-700: #047857;
-  --color-brand-green-800: #065f46;
-  --color-brand-green-905: #022c22;
+  --color-brand-green-50: #f0fdfa;
+  --color-brand-green-100: #cffafe;
+  --color-brand-green-150: #a5f3fc;
+  --color-brand-green-200: #67e8f9;
+  --color-brand-green-300: #22d3ee;
+  --color-brand-green-600: #0082cc;
+  --color-brand-green-700: #006299;
+  --color-brand-green-800: #004b73;
+  --color-brand-green-905: #001f30;
 
   /* Custom Broker Brand Accent (Cobalt/Indigo Blue) */
   --color-broker-blue: #2563eb;
@@ -94,7 +94,7 @@
   background-color: #05070c;
   background-image: 
     radial-gradient(at 10% 20%, rgba(37, 99, 235, 0.08) 0px, transparent 50%),
-    radial-gradient(at 90% 10%, rgba(16, 185, 129, 0.05) 0px, transparent 40%),
+    radial-gradient(at 90% 10%, rgba(0, 163, 255, 0.05) 0px, transparent 40%),
     radial-gradient(at 50% 80%, rgba(79, 70, 229, 0.06) 0px, transparent 50%);
 }
 

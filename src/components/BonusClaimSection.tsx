@@ -93,12 +93,12 @@ export default function BonusClaimSection({ onClaim }: BonusClaimSectionProps) {
             id="bonus-feedback-message"
             className={`p-3.5 rounded-2xl border text-xs leading-relaxed flex items-start gap-2.5 animate-fade-in ${
               feedback.type === 'success'
-                ? 'bg-emerald-500/15 border-emerald-500/45 text-emerald-250 font-bold'
+                ? 'bg-blue-500/15 border-blue-500/45 text-blue-200 font-bold'
                 : 'bg-rose-500/15 border-rose-500/45 text-rose-250 font-bold'
             }`}
           >
             {feedback.type === 'success' ? (
-              <CheckCircle className="w-4.5 h-4.5 text-emerald-400 shrink-0 mt-0.5" />
+              <CheckCircle className="w-4.5 h-4.5 text-blue-450 shrink-0 mt-0.5" />
             ) : (
               <AlertTriangle className="w-4.5 h-4.5 text-rose-400 shrink-0 mt-0.5" />
             )}

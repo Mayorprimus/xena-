@@ -52,6 +52,7 @@ import PromoReferralModal from './components/PromoReferralModal';
 import WelcomeXenaModal from './components/WelcomeXenaModal';
 import CryptoSwapSection from './components/CryptoSwapSection';
 import DailyStreakCard from './components/DailyStreakCard';
+import XenaLogo from './components/XenaLogo';
 import { motion } from 'motion/react';
 
 export default function App() {
@@ -141,7 +142,7 @@ export default function App() {
         if (Array.isArray(parsed) && parsed.length > 0) {
           return parsed.map((u, i) => ({
             ...u,
-            uid: u.uid || `XNA-${u.accountNumber ? u.accountNumber.split('-').pop() : Math.floor(10000 + Math.random() * 90000)}`
+            uid: u.uid ? u.uid.replace('XNA-', 'XENA-') : `XENA-${u.accountNumber ? u.accountNumber.split('-').pop() : Math.floor(10000 + Math.random() * 90000)}`
           }));
         }
       } catch (e) {}
@@ -169,7 +170,7 @@ export default function App() {
         btcBalance: 0.0035,
         ethBalance: 0.1250,
         bnbBalance: 1.450,
-        uid: 'XNA-49104'
+        uid: 'XENA-49104'
       },
       {
         fullName: 'Chioma Adebayo',
@@ -187,7 +188,7 @@ export default function App() {
         isFlagged: false,
         requireReferralToWithdraw: false,
         autoInvest: true,
-        uid: 'XNA-02931',
+        uid: 'XENA-02931',
         xenaBalance: 12.0
       },
       {
@@ -206,7 +207,7 @@ export default function App() {
         isFlagged: false,
         requireReferralToWithdraw: false,
         autoInvest: true,
-        uid: 'XNA-82041',
+        uid: 'XENA-82041',
         xenaBalance: 45.0
       }
     ];
@@ -292,7 +293,8 @@ export default function App() {
       solBalance: 0.250,
       btcBalance: 0.0035,
       ethBalance: 0.1250,
-      bnbBalance: 1.450
+      bnbBalance: 1.450,
+      uid: 'XENA-49104'
     };
   });
 
@@ -590,45 +592,58 @@ export default function App() {
       try {
         const res = await fetch('/api/sync');
         if (res.ok && isMounted) {
-          const data = await res.json();
-          if (data && (data.version > localVersion.current || !isInitializedFromServer.current)) {
-            // New changes exist on server database. Lock synchronizer feedback and update state.
-            isSyncingFromServer.current = true;
-            localVersion.current = data.version;
+          const contentType = res.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            const data = await res.json();
+            if (data && (data.version > localVersion.current || !isInitializedFromServer.current)) {
+              // New changes exist on server database. Lock synchronizer feedback and update state.
+              isSyncingFromServer.current = true;
+              localVersion.current = data.version;
 
-            if (data.registeredUsers) setRegisteredUsers(data.registeredUsers);
-            if (data.transactions) setTransactions(data.transactions);
-            if (data.activeInvestments) setActiveInvestments(data.activeInvestments);
-            if (data.depositAccounts) setDepositAccounts(data.depositAccounts);
-            if (data.csTickets) setCsTickets(data.csTickets);
-            if (data.userChatThreads) setUserChatThreads(data.userChatThreads);
-            if (data.referrals) setReferrals(data.referrals);
-            if (data.adminApprovalSettings) {
-              setAdminApprovalSettings({
-                requireDepositApproval: data.adminApprovalSettings.requireDepositApproval ?? true,
-                requireInvestmentApproval: data.adminApprovalSettings.requireInvestmentApproval ?? true,
-                requireWithdrawalApproval: data.adminApprovalSettings.requireWithdrawalApproval ?? true,
-                customReferralLink: data.adminApprovalSettings.customReferralLink ?? '',
-                isReferralLinkStatic: data.adminApprovalSettings.isReferralLinkStatic ?? false,
-                csNumber: data.adminApprovalSettings.csNumber ?? '08158432605',
-                officialWhatsAppGroup: data.adminApprovalSettings.officialWhatsAppGroup ?? 'https://chat.whatsapp.com/KHZgCi1h24154DqIIHz3VE',
-                minReferralWithdrawal: data.adminApprovalSettings.minReferralWithdrawal ?? 5000,
-                allowAnytimeWithdrawal: data.adminApprovalSettings.allowAnytimeWithdrawal ?? false
-              });
+              if (data.registeredUsers) setRegisteredUsers(data.registeredUsers);
+              if (data.transactions) setTransactions(data.transactions);
+              if (data.activeInvestments) setActiveInvestments(data.activeInvestments);
+              if (data.depositAccounts) setDepositAccounts(data.depositAccounts);
+              if (data.csTickets) setCsTickets(data.csTickets);
+              if (data.userChatThreads) setUserChatThreads(data.userChatThreads);
+              if (data.referrals) setReferrals(data.referrals);
+              if (data.adminApprovalSettings) {
+                setAdminApprovalSettings({
+                  requireDepositApproval: data.adminApprovalSettings.requireDepositApproval ?? true,
+                  requireInvestmentApproval: data.adminApprovalSettings.requireInvestmentApproval ?? true,
+                  requireWithdrawalApproval: data.adminApprovalSettings.requireWithdrawalApproval ?? true,
+                  customReferralLink: data.adminApprovalSettings.customReferralLink ?? '',
+                  isReferralLinkStatic: data.adminApprovalSettings.isReferralLinkStatic ?? false,
+                  csNumber: data.adminApprovalSettings.csNumber ?? '08158432605',
+                  officialWhatsAppGroup: data.adminApprovalSettings.officialWhatsAppGroup ?? 'https://chat.whatsapp.com/KHZgCi1h24154DqIIHz3VE',
+                  minReferralWithdrawal: data.adminApprovalSettings.minReferralWithdrawal ?? 5000,
+                  allowAnytimeWithdrawal: data.adminApprovalSettings.allowAnytimeWithdrawal ?? false
+                });
+              }
+
+              isInitializedFromServer.current = true;
+
+              setTimeout(() => {
+                isSyncingFromServer.current = false;
+              }, 800);
             }
-
-            isInitializedFromServer.current = true;
-
-            setTimeout(() => {
-              isSyncingFromServer.current = false;
-            }, 800);
+          } else {
+            console.warn("Sync server returned non-JSON response format (likely HTML fallback), retrying soon...");
           }
         }
       } catch (e) {
         // Gracefully warning-log transient network/restart errors, only error on true logical bugs
         const errorMsg = e instanceof Error ? e.message : String(e);
-        if (errorMsg.includes('Failed to fetch') || errorMsg.includes('fetch') || errorMsg.includes('network') || errorMsg.includes('Load failed')) {
-          console.warn("Sync server is temporarily offline or restarting, retrying soon...");
+        if (
+          errorMsg.includes('Failed to fetch') || 
+          errorMsg.includes('fetch') || 
+          errorMsg.includes('network') || 
+          errorMsg.includes('Load failed') ||
+          errorMsg.includes('Unexpected token') ||
+          errorMsg.includes('is not valid JSON') ||
+          errorMsg.includes('JSON')
+        ) {
+          console.warn("Sync server is temporarily offline or returning HTML fallback, retrying soon...");
         } else {
           console.error("Online poll error:", e);
         }
@@ -647,18 +662,42 @@ export default function App() {
   useEffect(() => {
     if (!isLoggedIn || !wallet || !wallet.email || isAdmin) return;
 
-    // Standardize current date according to sandbox simulatedTime
     const currentDateStr = new Date(simulatedTime).toISOString().split('T')[0];
-    const prevDateStr = wallet.lastLoginDate || '';
-
-    // If already checked/approved today, bypass
-    if (prevDateStr === currentDateStr) return;
+    const lastTimestamp = wallet.lastLoginTimestamp || 0;
+    
+    // Check if 23 hours have passed since last claim
+    if (lastTimestamp > 0) {
+      const elapsedMs = simulatedTime - lastTimestamp;
+      if (elapsedMs < 23 * 60 * 60 * 1000) {
+        return; // less than 23 hours elapsed, skip
+      }
+    } else {
+      // Fallback for older sessions with only lastLoginDate
+      const prevDateStr = wallet.lastLoginDate || '';
+      if (prevDateStr === currentDateStr) {
+        return;
+      }
+    }
 
     let newStreak = 1;
     let gotBonus = false;
 
-    if (prevDateStr) {
-      const prevDate = new Date(prevDateStr + 'T00:00:00');
+    if (lastTimestamp > 0) {
+      const elapsedMs = simulatedTime - lastTimestamp;
+      const elapsedHours = elapsedMs / (1000 * 60 * 60);
+
+      if (elapsedHours <= 48) {
+        // Consecutive (within 48 hours window)
+        newStreak = (wallet.loginStreak || 0) + 1;
+        gotBonus = true;
+      } else {
+        // Broken streak (more than 48 hours passed)
+        newStreak = 1;
+        gotBonus = true;
+      }
+    } else if (wallet.lastLoginDate) {
+      // Fallback date-based calculation
+      const prevDate = new Date(wallet.lastLoginDate + 'T00:00:00');
       const currDate = new Date(currentDateStr + 'T00:00:00');
       const diffMs = currDate.getTime() - prevDate.getTime();
       const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
@@ -666,13 +705,9 @@ export default function App() {
       if (diffDays === 1) {
         newStreak = (wallet.loginStreak || 0) + 1;
         gotBonus = true;
-      } else if (diffDays > 1) {
-        // broken consecutive streak
+      } else {
         newStreak = 1;
         gotBonus = true;
-      } else {
-        // Same day or time wound back, do not re-claim
-        return;
       }
     } else {
       // First ever login streak log
@@ -691,6 +726,7 @@ export default function App() {
               ...u,
               loginStreak: newStreak,
               lastLoginDate: currentDateStr,
+              lastLoginTimestamp: simulatedTime,
               walletBalance: u.walletBalance + bonusAmount,
               earnedBalance: u.earnedBalance + bonusAmount,
             };
@@ -757,16 +793,27 @@ export default function App() {
         });
 
         if (res.ok) {
-          const data = await res.json();
-          if (data && data.version) {
-            localVersion.current = data.version;
+          const contentType = res.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            const data = await res.json();
+            if (data && data.version) {
+              localVersion.current = data.version;
+            }
           }
         }
       } catch (error) {
         // Gracefully warning-log transient connection errors, only error on true logical bugs
         const errorMsg = error instanceof Error ? error.message : String(error);
-        if (errorMsg.includes('Failed to fetch') || errorMsg.includes('fetch') || errorMsg.includes('network') || errorMsg.includes('Load failed')) {
-          console.warn("Sync push is temporarily deferred due to offline/restart state. Will retry...");
+        if (
+          errorMsg.includes('Failed to fetch') || 
+          errorMsg.includes('fetch') || 
+          errorMsg.includes('network') || 
+          errorMsg.includes('Load failed') ||
+          errorMsg.includes('Unexpected token') ||
+          errorMsg.includes('is not valid JSON') ||
+          errorMsg.includes('JSON')
+        ) {
+          console.warn("Sync push is temporarily deferred due to offline/restart or HTML fallback state. Will retry...");
         } else {
           console.error("Sync push error:", error);
         }
@@ -787,17 +834,49 @@ export default function App() {
 
   const areWalletsDifferent = (w1: any, w2: any): boolean => {
     if (!w1 || !w2) return w1 !== w2;
-    const allKeys = Array.from(new Set([...Object.keys(w1), ...Object.keys(w2)]));
-    for (const key of allKeys) {
-      const v1 = w1[key];
-      const v2 = w2[key];
-      const isFalsy1 = v1 === undefined || v1 === null || v1 === false;
-      const isFalsy2 = v2 === undefined || v2 === null || v2 === false;
-      if (isFalsy1 && isFalsy2) {
-        continue;
-      }
-      if (v1 !== v2) {
-        return true;
+    const keys = [
+      'walletBalance',
+      'investedBalance',
+      'withdrawnBalance',
+      'earnedBalance',
+      'accountNumber',
+      'fullName',
+      'email',
+      'referralCode',
+      'isFlagged',
+      'requireReferralToWithdraw',
+      'referredBy',
+      'autoInvest',
+      'xenaBalance',
+      'solBalance',
+      'btcBalance',
+      'ethBalance',
+      'bnbBalance',
+      'uid',
+      'loginStreak',
+      'lastLoginDate',
+      'lastLoginTimestamp',
+      'country',
+      'kycIdType',
+      'kycIdNumber',
+      'kycStatus'
+    ];
+    for (const key of keys) {
+      let v1 = w1[key];
+      let v2 = w2[key];
+      
+      // Normalize falsy values to empty string for clean comparison
+      if (v1 === undefined || v1 === null || v1 === false) v1 = '';
+      if (v2 === undefined || v2 === null || v2 === false) v2 = '';
+      
+      if (typeof v1 === 'number' && typeof v2 === 'number') {
+        if (Math.abs(v1 - v2) > 1e-9) {
+          return true;
+        }
+      } else {
+        if (v1 !== v2) {
+          return true;
+        }
       }
     }
     return false;
@@ -828,7 +907,7 @@ export default function App() {
     } else if (isInitializedFromServer.current) {
       handleLogout();
     }
-  }, [registeredUsers]);
+  }, [registeredUsers, wallet]);
 
   // Filter user-specific lists so each registered account has their own isolated ledger
   const userTransactions = transactions.filter(
@@ -1697,6 +1776,9 @@ export default function App() {
     accountNumber: string;
     referralUsed: string;
     password?: string;
+    country: string;
+    kycIdType: string;
+    kycIdNumber: string;
   }) => {
     const cleanNamePart = newUser.fullName.split(' ')[0]?.toUpperCase().replace(/[^A-Z]/g, '') || 'MEMBER';
     const randCode = Math.floor(1000 + Math.random() * 9000);
@@ -1718,7 +1800,11 @@ export default function App() {
       isFlagged: false,
       requireReferralToWithdraw: false,
       referredBy: newUser.referralUsed || undefined,
-      autoInvest: true
+      autoInvest: true,
+      country: newUser.country,
+      kycIdType: newUser.kycIdType,
+      kycIdNumber: newUser.kycIdNumber,
+      kycStatus: 'verified'
     };
 
     setWallet(newWallet);
@@ -2055,7 +2141,7 @@ export default function App() {
     } else {
       setActiveTab('dashboard');
       if (isJustRegisteredRef.current) {
-        setShowPromoModal(true);
+        setShowWelcomeModal(true);
         isJustRegisteredRef.current = false;
       }
     }
@@ -2095,31 +2181,28 @@ export default function App() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             
             {/* Mini Portfolio Brand Box — Replaces header logo neatly on home page with glowing X emblem */}
-            <div className="bg-[#0b0e14]/50 border border-slate-850 rounded-2xl p-4 flex flex-col justify-center text-left relative overflow-hidden shadow-md">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-xl pointer-events-none" />
+            <div className="bg-slate-950/90 border border-slate-800/80 rounded-2xl p-4 flex flex-col justify-center text-left relative overflow-hidden shadow-xl">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-blue-500/5 rounded-full blur-lg pointer-events-none" />
               <div className="flex items-center gap-3 select-none">
-                <div className="relative w-10 h-10 bg-gradient-to-tr from-[#02050b] to-[#0e1322] border border-indigo-500/35 rounded-xl flex items-center justify-center shadow-[0_0_15px_rgba(34,211,238,0.25)] shrink-0 overflow-hidden">
-                  <div className="absolute inset-0 bg-indigo-505/5 animate-pulse" />
-                  <span className="text-xl font-sans font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-white to-purple-400 drop-shadow-[0_0_4px_#22d3ee] tracking-tighter select-none">
-                    X
-                  </span>
+                <div className="shrink-0 bg-slate-900 p-1.5 rounded-xl border border-slate-800">
+                  <XenaLogo size={40} showText={false} />
                 </div>
                 <div className="flex flex-col">
-                  <div className="font-sans text-base font-black tracking-[0.12em] text-white leading-none flex items-center gap-1">
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-white to-indigo-300 drop-shadow-[0_0_6px_rgba(34,211,238,0.5)] font-black">X</span>ENA
-                    <span className="text-[9px] text-indigo-400 font-black tracking-widest bg-indigo-500/10 border border-indigo-500/10 px-1 py-0.5 rounded uppercase font-mono scale-[0.8] origin-left">
-                      SECURE
+                  <div className="font-sans text-sm font-black tracking-[0.15em] text-white leading-none flex items-center gap-1.5">
+                    XENA
+                    <span className="text-[8px] text-blue-400 font-extrabold tracking-widest bg-blue-500/10 border border-blue-500/20 px-1.5 py-0.5 rounded font-mono uppercase">
+                      SECURED
                     </span>
                   </div>
-                  <span className="text-[7px] text-slate-400 leading-none tracking-[0.2em] font-extrabold uppercase mt-1">
-                    PREMIUM WEALTH
+                  <span className="text-[7.5px] text-slate-400 leading-none tracking-[0.25em] font-extrabold uppercase mt-1.5">
+                    Institutional Wealth
                   </span>
                 </div>
               </div>
-              <div className="mt-3.5 pt-3 border-t border-slate-900 flex justify-between items-center text-[10px] text-zinc-400">
-                <span className="font-mono">User: {wallet.fullName?.split(' ')[0]}</span>
+              <div className="mt-4 pt-3 border-t border-slate-900 flex justify-between items-center text-[10px] text-zinc-400">
+                <span className="font-mono text-zinc-500">ID: <strong className="text-zinc-300 font-black">{wallet.uid || `XENA-${wallet.referralCode?.split('-').pop() || '49104'}`}</strong></span>
                 <span className="font-mono text-blue-400 font-extrabold flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" /> Active Node
+                  <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" /> Asset Vault Secured
                 </span>
               </div>
             </div>
@@ -2142,13 +2225,6 @@ export default function App() {
                   </span>
                 </div>
               </div>
-              <button
-                id="btn-header-deposit-card"
-                onClick={() => handleOpenModal('deposit')}
-                className="px-3.5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-black transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer shadow hover:shadow-blue-500/20 flex items-center gap-1.5 shrink-0"
-              >
-                Deposit <Plus className="w-3 h-3 stroke-[3]" />
-              </button>
             </div>
 
             {/* Invested Balance Card */}
@@ -2169,13 +2245,6 @@ export default function App() {
                   </span>
                 </div>
               </div>
-              <button
-                id="btn-header-withdraw-card"
-                onClick={() => handleOpenModal('withdraw')}
-                className="px-3.5 py-2.5 bg-white/5 hover:bg-white/10 text-white border border-slate-800 hover:border-slate-705 rounded-xl text-xs font-black transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer flex items-center gap-1.5 shrink-0"
-              >
-                Withdraw <ArrowUpRight className="w-3 h-3 stroke-[3]" />
-              </button>
             </div>
 
           </div>
@@ -2208,7 +2277,7 @@ export default function App() {
                   ● SECURE SYSTEM
                 </span>
                 <span className="inline-flex items-center px-2.5 py-1 rounded bg-blue-50/10 text-blue-450 text-[8.5px] font-black uppercase tracking-wider font-mono">
-                  ● CBN VERIFIED
+                  ● SECURED LEDGER
                 </span>
               </div>
             </div>
@@ -2216,120 +2285,7 @@ export default function App() {
             {/* Top Stats blocks */}
             <StatsGrid wallet={wallet} onOpenModal={handleOpenModal} activeInvestments={activeInvestments} />
 
-            {/* Pr            {/* Premium 5-Level Daily Referral Commission Matrix */}
-            <div className="bg-[#0b0e14] border border-slate-800/80 rounded-2xl p-5 shadow-2xl relative overflow-hidden text-left">
-              <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/5 rounded-full blur-[100px] pointer-events-none" />
-              
-              <div className="relative z-10 space-y-4">
-                {(() => {
-                  const netCounts = (() => {
-                    const codeNormalized = (wallet.referralCode || '').trim().toLowerCase();
-                    if (!codeNormalized) return { lv1: 0, lv2: 0, lv3: 0, lv4: 0, lv5: 0 };
-                    const lv1Users = registeredUsers.filter(u => u.referredBy?.trim().toLowerCase() === codeNormalized);
-                    const lv2Users = registeredUsers.filter(u => {
-                      if (!u.referredBy) return false;
-                      const refByCode = u.referredBy.trim().toLowerCase();
-                      return lv1Users.some(l1 => l1.referralCode.trim().toLowerCase() === refByCode);
-                    });
-                    const lv3Users = registeredUsers.filter(u => {
-                      if (!u.referredBy) return false;
-                      const refByCode = u.referredBy.trim().toLowerCase();
-                      return lv2Users.some(l2 => l2.referralCode.trim().toLowerCase() === refByCode);
-                    });
-                    const lv4Users = registeredUsers.filter(u => {
-                      if (!u.referredBy) return false;
-                      const refByCode = u.referredBy.trim().toLowerCase();
-                      return lv3Users.some(l3 => l3.referralCode.trim().toLowerCase() === refByCode);
-                    });
-                    const lv5Users = registeredUsers.filter(u => {
-                      if (!u.referredBy) return false;
-                      const refByCode = u.referredBy.trim().toLowerCase();
-                      return lv4Users.some(l4 => l4.referralCode.trim().toLowerCase() === refByCode);
-                    });
-                    return {
-                      lv1: lv1Users.length,
-                      lv2: lv2Users.length,
-                      lv3: lv3Users.length,
-                      lv4: lv4Users.length,
-                      lv5: lv5Users.length
-                    };
-                  })();
 
-                  const totalNetworkCount = netCounts.lv1 + netCounts.lv2 + netCounts.lv3 + netCounts.lv4 + netCounts.lv5;
-
-                  const levelsConfig = [
-                    { level: 1, rate: '0.1% daily', name: 'Bronze Rank', req: 5, current: netCounts.lv1, border: 'border-amber-500/30 text-amber-550' },
-                    { level: 2, rate: '0.2% daily', name: 'Silver Rank', req: 10, current: netCounts.lv2, border: 'border-slate-350/20 text-slate-350' },
-                    { level: 3, rate: '0.3% daily', name: 'Gold Rank', req: 15, current: netCounts.lv3, border: 'border-yellow-500/30 text-yellow-500' },
-                    { level: 4, rate: '0.4% daily', name: 'Platinum Rank', req: 20, current: netCounts.lv4, border: 'border-indigo-500/20 text-indigo-400' },
-                    { level: 5, rate: '0.5% daily', name: 'Diamond Rank', req: 25, current: netCounts.lv5, border: 'border-cyan-500/30 text-cyan-400' }
-                  ];
-
-                  return (
-                    <>
-                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-slate-800/50">
-                        <div className="space-y-0.5">
-                          <span className="text-[8.5px] bg-blue-400/10 border border-blue-500/25 text-blue-400 font-extrabold uppercase px-2 py-0.5 rounded-md tracking-wider font-mono">
-                            XENA PARTNER NETWORKS
-                          </span>
-                          <h3 className="text-sm font-black text-white font-sans flex items-center gap-1.5 mt-1">
-                            <Sparkles className="w-4 h-4 text-blue-400" />
-                            Dynamic Shareholder Dividends Network
-                          </h3>
-                        </div>
-                        <div className="bg-black/35 border border-slate-800 px-3 py-1.5 rounded-lg font-mono text-[10px] flex items-center gap-1.5 shrink-0 self-start md:self-auto">
-                          <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
-                          <span className="text-zinc-400 font-bold">TOTAL COMMISSIONS:</span>
-                          <strong className="text-blue-400 font-extrabold">{totalNetworkCount} MEMBERS</strong>
-                        </div>
-                      </div>
-
-                      {/* Clean compact list container of levelsConfig */}
-                      <div className="grid grid-cols-1 md:grid-cols-5 gap-3 pt-2">
-                        {levelsConfig.map((lv) => {
-                          const isUnlocked = lv.current >= lv.req;
-
-                          return (
-                            <div 
-                              key={lv.level} 
-                              className={`rounded-xl p-3 border flex items-center justify-between gap-2 transition-all duration-300 ${
-                                isUnlocked 
-                                  ? `bg-[#0e121e]/80 ${lv.border} shadow-sm` 
-                                  : 'bg-black/15 border-slate-850/40 opacity-50'
-                              }`}
-                            >
-                              <div className="flex items-center gap-2">
-                                <span className={`w-7 h-7 rounded-lg flex items-center justify-center font-mono font-black text-xs ${isUnlocked ? 'bg-blue-500/10 text-blue-400' : 'bg-slate-800 text-slate-500'}`}>
-                                  L{lv.level}
-                                </span>
-                                <div className="flex flex-col text-left">
-                                  <span className="text-[10px] font-extrabold text-slate-205 leading-none">{lv.name}</span>
-                                  <span className={`text-[9px] font-bold font-mono tracking-tight mt-0.5 ${isUnlocked ? 'text-blue-400' : 'text-slate-500'}`}>
-                                    +{lv.rate}
-                                  </span>
-                                </div>
-                              </div>
-                              
-                              <div className="text-right leading-none shrink-0">
-                                <span className="text-[10px] font-mono text-slate-300 font-extrabold block">{lv.current}/{lv.req}</span>
-                                <span className={`text-[8px] font-black font-sans tracking-tight uppercase block mt-1 ${isUnlocked ? 'text-blue-400' : 'text-slate-500'}`}>
-                                  {isUnlocked ? 'OK' : '🔒 LOCK'}
-                                </span>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-
-                      <div className="p-2.5 bg-blue-950/20 border border-blue-900/20 text-blue-450 font-sans font-medium text-[9.5px] rounded-xl flex items-center gap-2">
-                        <span className="shrink-0 p-0.5 px-1 bg-blue-500/10 border border-blue-500/20 rounded font-bold">⚡ RULES</span>
-                        Recursively earn bonus shares up to Level 5 overrides. Expand active referral counts to unlock advanced tiers.
-                      </div>
-                    </>
-                  );
-                })()}
-              </div>
-            </div>
                      {/* Claim Welcome Bonus Banner */}
             {!wallet.hasClaimedBonus ? (
               <div id="bonus-claim-callout" className="bg-gradient-to-r from-blue-600 to-blue-950 border border-blue-250 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-md text-white relative overflow-hidden animate-pulse">
@@ -2394,6 +2350,13 @@ export default function App() {
                   onOpenInvestTab={() => setActiveTab('invest')}
                 />
 
+                {/* Daily Login Streak Status Block - Moved before transaction history */}
+                <DailyStreakCard 
+                  wallet={wallet}
+                  simulatedTime={simulatedTime}
+                  onAdvanceTime={handleAdvanceTime}
+                />
+
                 {/* Bonus Reward Coupon Claim Section - Moved before transaction log */}
                 <BonusClaimSection 
                   onClaim={handleClaimBonusCode}
@@ -2405,14 +2368,7 @@ export default function App() {
               {/* Right Column: Time machine simulation and security details */}
               <div className="lg:col-span-4 space-y-8">
                 
-                {/* Daily Login Streak Status Block */}
-                <DailyStreakCard 
-                  wallet={wallet}
-                  simulatedTime={simulatedTime}
-                  onAdvanceTime={handleAdvanceTime}
-                />
-
-                {/* Refer and Earn Card - Modern Executive Design */}
+                {/* Refer and Earn Card - Modern Executive Design - Moved up to the top of the column */}
                 <div id="referral-affiliate-card" className="bg-gradient-to-br from-indigo-950 via-slate-900 to-zinc-950 border border-indigo-500/20 rounded-3xl p-6 text-white relative overflow-hidden shadow-xl font-sans text-left">
                   {/* Outer decorative light leaks */}
                   <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
@@ -2627,6 +2583,121 @@ export default function App() {
             </div>
 
             <Calculator />
+
+            {/* Premium 5-Level Daily Referral Commission Matrix */}
+            <div className="bg-[#0b0e14] border border-slate-800/80 rounded-2xl p-5 shadow-2xl relative overflow-hidden text-left">
+              <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/5 rounded-full blur-[100px] pointer-events-none" />
+              
+              <div className="relative z-10 space-y-4">
+                {(() => {
+                  const netCounts = (() => {
+                    const codeNormalized = (wallet.referralCode || '').trim().toLowerCase();
+                    if (!codeNormalized) return { lv1: 0, lv2: 0, lv3: 0, lv4: 0, lv5: 0 };
+                    const lv1Users = registeredUsers.filter(u => u.referredBy?.trim().toLowerCase() === codeNormalized);
+                    const lv2Users = registeredUsers.filter(u => {
+                      if (!u.referredBy) return false;
+                      const refByCode = u.referredBy.trim().toLowerCase();
+                      return lv1Users.some(l1 => l1.referralCode.trim().toLowerCase() === refByCode);
+                    });
+                    const lv3Users = registeredUsers.filter(u => {
+                      if (!u.referredBy) return false;
+                      const refByCode = u.referredBy.trim().toLowerCase();
+                      return lv2Users.some(l2 => l2.referralCode.trim().toLowerCase() === refByCode);
+                    });
+                    const lv4Users = registeredUsers.filter(u => {
+                      if (!u.referredBy) return false;
+                      const refByCode = u.referredBy.trim().toLowerCase();
+                      return lv3Users.some(l3 => l3.referralCode.trim().toLowerCase() === refByCode);
+                    });
+                    const lv5Users = registeredUsers.filter(u => {
+                      if (!u.referredBy) return false;
+                      const refByCode = u.referredBy.trim().toLowerCase();
+                      return lv4Users.some(l4 => l4.referralCode.trim().toLowerCase() === refByCode);
+                    });
+                    return {
+                      lv1: lv1Users.length,
+                      lv2: lv2Users.length,
+                      lv3: lv3Users.length,
+                      lv4: lv4Users.length,
+                      lv5: lv5Users.length
+                    };
+                  })();
+
+                  const totalNetworkCount = netCounts.lv1 + netCounts.lv2 + netCounts.lv3 + netCounts.lv4 + netCounts.lv5;
+
+                  const levelsConfig = [
+                    { level: 1, rate: '0.1% daily', name: 'Bronze Rank', req: 5, current: netCounts.lv1, border: 'border-amber-500/30 text-amber-550' },
+                    { level: 2, rate: '0.2% daily', name: 'Silver Rank', req: 10, current: netCounts.lv2, border: 'border-slate-350/20 text-slate-350' },
+                    { level: 3, rate: '0.3% daily', name: 'Gold Rank', req: 15, current: netCounts.lv3, border: 'border-yellow-500/30 text-yellow-500' },
+                    { level: 4, rate: '0.4% daily', name: 'Platinum Rank', req: 20, current: netCounts.lv4, border: 'border-indigo-500/20 text-indigo-400' },
+                    { level: 5, rate: '0.5% daily', name: 'Diamond Rank', req: 25, current: netCounts.lv5, border: 'border-cyan-500/30 text-cyan-400' }
+                  ];
+
+                  return (
+                    <>
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-slate-800/50">
+                        <div className="space-y-0.5">
+                          <span className="text-[8.5px] bg-blue-400/10 border border-blue-500/25 text-blue-400 font-extrabold uppercase px-2 py-0.5 rounded-md tracking-wider font-mono">
+                            XENA PARTNER NETWORKS
+                          </span>
+                          <h3 className="text-sm font-black text-white font-sans flex items-center gap-1.5 mt-1">
+                            <Sparkles className="w-4 h-4 text-blue-400" />
+                            Dynamic Shareholder Dividends Network
+                          </h3>
+                        </div>
+                        <div className="bg-black/35 border border-slate-800 px-3 py-1.5 rounded-lg font-mono text-[10px] flex items-center gap-1.5 shrink-0 self-start md:self-auto">
+                          <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
+                          <span className="text-zinc-400 font-bold">TOTAL COMMISSIONS:</span>
+                          <strong className="text-blue-400 font-extrabold">{totalNetworkCount} MEMBERS</strong>
+                        </div>
+                      </div>
+
+                      {/* Clean compact list container of levelsConfig */}
+                      <div className="grid grid-cols-1 md:grid-cols-5 gap-3 pt-2">
+                        {levelsConfig.map((lv) => {
+                          const isUnlocked = lv.current >= lv.req;
+
+                          return (
+                            <div 
+                              key={lv.level} 
+                              className={`rounded-xl p-3 border flex items-center justify-between gap-2 transition-all duration-300 ${
+                                isUnlocked 
+                                  ? `bg-[#0e121e]/80 ${lv.border} shadow-sm` 
+                                  : 'bg-black/15 border-slate-850/40 opacity-50'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2">
+                                <span className={`w-7 h-7 rounded-lg flex items-center justify-center font-mono font-black text-xs ${isUnlocked ? 'bg-blue-500/10 text-blue-400' : 'bg-slate-800 text-slate-500'}`}>
+                                  L{lv.level}
+                                </span>
+                                <div className="flex flex-col text-left">
+                                  <span className="text-[10px] font-extrabold text-slate-205 leading-none">{lv.name}</span>
+                                  <span className={`text-[9px] font-bold font-mono tracking-tight mt-0.5 ${isUnlocked ? 'text-blue-400' : 'text-slate-500'}`}>
+                                    +{lv.rate}
+                                  </span>
+                                </div>
+                              </div>
+                              
+                              <div className="text-right leading-none shrink-0">
+                                <span className="text-[10px] font-mono text-slate-300 font-extrabold block">{lv.current}/{lv.req}</span>
+                                <span className={`text-[8px] font-black font-sans tracking-tight uppercase block mt-1 ${isUnlocked ? 'text-blue-400' : 'text-slate-500'}`}>
+                                  {isUnlocked ? 'OK' : '🔒 LOCK'}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      <div className="p-2.5 bg-blue-950/20 border border-blue-900/20 text-blue-450 font-sans font-medium text-[9.5px] rounded-xl flex items-center gap-2">
+                        <span className="shrink-0 p-0.5 px-1 bg-blue-500/10 border border-blue-500/20 rounded font-bold">⚡ RULES</span>
+                        Recursively earn bonus shares up to Level 5 overrides. Expand active referral counts to unlock advanced tiers.
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
 
             {/* Structured Dual Section on Referral Level Matrix & XENA COIN */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pt-4">

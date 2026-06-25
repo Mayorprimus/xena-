@@ -13,7 +13,11 @@ export default function DailyStreakCard({ wallet, simulatedTime, onAdvanceTime }
   const currentStreak = wallet.loginStreak || 0;
   const lastLogin = wallet.lastLoginDate || 'Never';
   const currentDateStr = new Date(simulatedTime).toISOString().split('T')[0];
-  const isClaimedToday = lastLogin === currentDateStr;
+  
+  const lastLoginTimestamp = wallet.lastLoginTimestamp || 0;
+  const isClaimedToday = lastLoginTimestamp > 0
+    ? (simulatedTime - lastLoginTimestamp < 23 * 60 * 60 * 1000)
+    : (lastLogin === currentDateStr);
 
   // Streak rewards: Day 1: 100, Day 2: 200, Day 3: 300, etc., capped at 1000 NGN
   const getRewardForDay = (dayNum: number) => {
@@ -127,12 +131,12 @@ export default function DailyStreakCard({ wallet, simulatedTime, onAdvanceTime }
       {/* Information Feed / CTA action */}
       <div className="relative z-10 space-y-3">
         {isClaimedToday ? (
-          <div className="p-3 bg-emerald-950/20 border border-emerald-900/30 rounded-xl flex items-start gap-2 text-emerald-400">
-            <Sparkles className="w-4.5 h-4.5 text-emerald-400 shrink-0 mt-0.5 animate-pulse" />
+          <div className="p-3 bg-blue-950/20 border border-blue-900/30 rounded-xl flex items-start gap-2 text-blue-400">
+            <Sparkles className="w-4.5 h-4.5 text-blue-400 shrink-0 mt-0.5 animate-pulse" />
             <div className="text-left font-sans text-xs">
-              <strong className="block font-black text-white text-[11.5px]">Streak Dividend Claimed Today!</strong>
-              <p className="text-emerald-300 font-medium leading-relaxed mt-0.5">
-                Nice job! You claimed (+₦{getRewardForDay(currentStreak).toLocaleString()}) and set your ledger to Day {currentStreak}. Log in again tomorrow (simulate 1 day forward) to claim <strong className="text-white">+₦{potentialTomorrowBonus.toLocaleString()}</strong>!
+              <strong className="block font-black text-white text-[11.5px]">Streak Dividend Claimed!</strong>
+              <p className="text-blue-300 font-medium leading-relaxed mt-0.5">
+                Nice job! You claimed (+₦{getRewardForDay(currentStreak).toLocaleString()}) and set your ledger to Day {currentStreak}. Log in again after 23 hours to claim your next reward of <strong className="text-white">+₦{potentialTomorrowBonus.toLocaleString()}</strong>!
               </p>
             </div>
           </div>
@@ -148,17 +152,15 @@ export default function DailyStreakCard({ wallet, simulatedTime, onAdvanceTime }
           </div>
         )}
 
-        {/* Time Simulator Hook button so user can test consecutiveness in real-time! */}
-        <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 text-left">
-          <div className="flex items-center gap-1.5 text-[10.5px] text-zinc-500 font-bold uppercase font-sans">
-            <Calendar className="w-3.5 h-3.5 text-slate-400" /> Test sandbox simulation tool:
-          </div>
+        {/* Leap forward button with clean minimal presentation */}
+        <div className="pt-2 flex justify-end">
           <button
             type="button"
             onClick={() => onAdvanceTime(24 * 60 * 60 * 1000)}
-            className="w-full sm:w-auto px-4 py-2.5 bg-indigo-650 hover:bg-indigo-555 text-white hover:text-white border border-indigo-550 hover:border-indigo-400 rounded-xl text-[10.5px] font-black uppercase tracking-wider transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 shrink-0 shadow-lg"
+            className="w-full sm:w-auto px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white hover:text-white border border-indigo-505/30 rounded-xl text-[10.5px] font-black uppercase tracking-wider transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 shrink-0 shadow-lg"
           >
-            Leap 1 Day Forward (Simulate Login)
+            <Calendar className="w-4 h-4" />
+            Leap 1 Day Forward
           </button>
         </div>
       </div>

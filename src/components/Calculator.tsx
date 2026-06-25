@@ -29,7 +29,7 @@ export default function Calculator() {
       {/* Title */}
       <div>
         <h3 className="text-lg font-black text-white font-sans flex items-center gap-2">
-          <TrendingUp className="w-5 h-5 text-emerald-400" /> Dividend Growth Calculator
+          <TrendingUp className="w-5 h-5 text-cyan-400" /> Dividend Growth Calculator
         </h3>
         <p className="text-xs text-slate-400 font-semibold">Simulate XENA stock options growth. Contrast standard withdrawals with the dynamic rolling compounding engine.</p>
       </div>
@@ -42,7 +42,7 @@ export default function Calculator() {
           <div className="space-y-4">
             <div className="flex justify-between items-center text-xs">
               <span className="text-slate-400 font-extrabold uppercase tracking-wider">Simulated Share Capital Size</span>
-              <strong className="text-emerald-400 font-black text-xl font-mono bg-[#070a0e] border border-slate-800 px-3.5 py-1.5 rounded-xl shadow-inner">{formatNGN(calcAmount)}</strong>
+              <strong className="text-cyan-400 font-black text-xl font-mono bg-[#070a0e] border border-slate-800 px-3.5 py-1.5 rounded-xl shadow-inner">{formatNGN(calcAmount)}</strong>
             </div>
             
             <div className="relative group pt-1">
@@ -54,7 +54,7 @@ export default function Calculator() {
                 step="500"
                 value={calcAmount}
                 onChange={(e) => setCalcAmount(parseInt(e.target.value))}
-                className="w-full h-2.5 bg-slate-900 border border-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500 focus:outline-none transition-all outline-none"
+                className="w-full h-2.5 bg-slate-900 border border-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500 focus:outline-none transition-all outline-none"
               />
             </div>
             <div className="flex justify-between text-[10px] text-slate-500 font-extrabold uppercase font-mono">
@@ -97,10 +97,10 @@ export default function Calculator() {
             </div>
           </div>
 
-          <div className="p-4 bg-emerald-950/15 border border-emerald-900/30 rounded-2xl flex items-start gap-3">
-            <Sparkles className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5 animate-pulse" />
+          <div className="p-4 bg-blue-950/15 border border-blue-900/30 rounded-2xl flex items-start gap-3">
+            <Sparkles className="w-5 h-5 text-cyan-400 shrink-0 mt-0.5 animate-pulse" />
             <div className="space-y-1">
-              <span className="text-xs font-black text-emerald-400 uppercase tracking-wide block font-sans">Compounding Factor: {(1 + returnRatePerCycle).toFixed(2)}x Per Turn</span>
+              <span className="text-xs font-black text-cyan-400 uppercase tracking-wide block font-sans">Compounding Factor: {(1 + returnRatePerCycle).toFixed(2)}x Per Turn</span>
               <p className="text-[11px] text-slate-400 leading-relaxed font-semibold font-sans">
                 By enabling rollover compounding, your daily dividends are automatically folded back into your holdings. At {(returnRatePerCycle * 100).toFixed(1)}% term gain per {termDays} days, your capital grows geometrically, delivering extreme asset compounding.
               </p>
@@ -131,13 +131,13 @@ export default function Calculator() {
             {/* Compounded Return box */}
             <div className="space-y-1 pt-1">
               <div className="flex justify-between items-baseline">
-                <span className="text-xs text-emerald-400 font-black flex items-center gap-1">
-                  <Sparkles className="w-4 h-4 text-emerald-450 animate-pulse" /> Rolling Compound Pipeline
+                <span className="text-xs text-cyan-400 font-black flex items-center gap-1">
+                  <Sparkles className="w-4 h-4 text-cyan-400 animate-pulse" /> Rolling Compound Pipeline
                 </span>
-                <span className="text-lg font-black text-emerald-400 font-mono">{formatNGN(compoundTotal)}</span>
+                <span className="text-lg font-black text-cyan-400 font-mono">{formatNGN(compoundTotal)}</span>
               </div>
-              <div className="w-full bg-emerald-950/20 h-2 rounded-full overflow-hidden border border-emerald-900/30">
-                <div className="bg-emerald-500 h-full rounded-full transition-all duration-300" style={{ width: '100%' }} />
+              <div className="w-full bg-blue-950/20 h-2 rounded-full overflow-hidden border border-blue-900/30">
+                <div className="bg-blue-500 h-full rounded-full transition-all duration-300" style={{ width: '100%' }} />
               </div>
               <p className="text-[10px] text-slate-400 font-bold">Maximum compounding speed backed by dynamic daily dividend roller integrations.</p>
             </div>
@@ -148,11 +148,11 @@ export default function Calculator() {
               <span>Initial Share Buy-in:</span>
               <span className="font-bold text-slate-300 font-mono">{formatNGN(calcAmount)}</span>
             </div>
-            <div className="flex justify-between items-center text-emerald-400 font-semibold bg-[#101918] px-3 py-2.5 rounded-xl border border-emerald-900/40">
+            <div className="flex justify-between items-center text-cyan-400 font-semibold bg-[#0c1424] px-3 py-2.5 rounded-xl border border-blue-900/40">
               <span className="flex items-center gap-1.5">
-                <ArrowRight className="w-3.5 h-3.5 shrink-0 text-emerald-500" /> Net Yield Projection:
+                <ArrowRight className="w-3.5 h-3.5 shrink-0 text-cyan-400" /> Net Yield Projection:
               </span>
-              <span className="font-mono font-black text-emerald-300">+{formatNGN(compoundReturn)}</span>
+              <span className="font-mono font-black text-cyan-300">+{formatNGN(compoundReturn)}</span>
             </div>
           </div>
         </div>

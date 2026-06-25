@@ -2185,8 +2185,8 @@ export default function AdminPortal({
             <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider block font-sans">Generate Client Reward Voucher</h4>
             
             {bonusAddSuccess && (
-              <div className="p-3 bg-emerald-50 border border-emerald-250 text-emerald-800 text-xs font-bold rounded-xl animate-fade-in flex items-center gap-1.5 font-sans">
-                <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+              <div className="p-3 bg-blue-50 border border-blue-200 text-blue-800 text-xs font-bold rounded-xl animate-fade-in flex items-center gap-1.5 font-sans">
+                <CheckCircle className="w-4 h-4 text-blue-600 shrink-0" />
                 {bonusAddSuccess}
               </div>
             )}

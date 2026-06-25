@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Shield, Landmark, User, Mail, Lock, Gift, HelpCircle, ShieldCheck } from 'lucide-react';
+import { Shield, Landmark, User, Mail, Lock, Gift, HelpCircle, ShieldCheck, Globe, FileText } from 'lucide-react';
 import { formatNGN } from '../utils';
 import { UserWallet } from '../types';
+import XenaLogo from './XenaLogo';
 
 interface AuthScreenProps {
   onLoginSuccess: (userWallet: UserWallet, isAdmin: boolean) => void;
@@ -22,8 +23,9 @@ export default function AuthScreen({
   // Signup states
   const [fullName, setFullName] = useState('');
   const [signupEmail, setSignupEmail] = useState('');
-  const [bankName, setBankName] = useState('Access Bank');
-  const [accountNumber, setAccountNumber] = useState('');
+  const [country, setCountry] = useState('Nigeria');
+  const [kycIdType, setKycIdType] = useState('National ID');
+  const [kycIdNumber, setKycIdNumber] = useState('');
   const [signupPassword, setSignupPassword] = useState('');
   const [referralCode, setReferralCode] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
@@ -113,8 +115,8 @@ export default function AuthScreen({
       setErrorMsg('The email administrative routing space is restricted. Please use your private email.');
       return;
     }
-    if (accountNumber.length !== 10 || isNaN(Number(accountNumber))) {
-      setErrorMsg('Nigerian bank NUBAN account number must be exactly 10 digits.');
+    if (!kycIdNumber.trim() || kycIdNumber.trim().length < 4) {
+      setErrorMsg('Please enter a valid official ID document number (at least 4 characters).');
       return;
     }
     if (signupPassword.length < 4) {
@@ -133,11 +135,11 @@ export default function AuthScreen({
     const cleanNamePart = fullName.trim().split(' ')[0]?.toUpperCase().replace(/[^A-Z]/g, '') || 'MEMBER';
     const randCode = Math.floor(1000 + Math.random() * 9000);
     const generatedReferralCode = `XEN-${cleanNamePart}-${randCode}`;
-    const randUid = `XNA-${Math.floor(10000 + Math.random() * 90000)}`;
+    const randUid = `XENA-${Math.floor(10000 + Math.random() * 90000)}`;
     const newWallet: UserWallet = {
       fullName: fullName.trim(),
       email: signupEmail.trim(),
-      accountNumber: `NG-ACC-${accountNumber}|${bankName}`,
+      accountNumber: `XENA-VAULT-${Math.floor(100000 + Math.random() * 900000)}`,
       walletBalance: 0, // Fresh shareholder starts with 0 Naira
       investedBalance: 0,
       withdrawnBalance: 0,
@@ -156,7 +158,11 @@ export default function AuthScreen({
       solBalance: 0,
       btcBalance: 0,
       ethBalance: 0,
-      bnbBalance: 0
+      bnbBalance: 0,
+      country,
+      kycIdType,
+      kycIdNumber,
+      kycStatus: 'verified' // Automatically verified KYC to allow instant high performance operations
     };
 
     onRegisterUser(newWallet);
@@ -169,7 +175,7 @@ export default function AuthScreen({
       // Reset signup fields
       setFullName('');
       setSignupEmail('');
-      setAccountNumber('');
+      setKycIdNumber('');
       setSignupPassword('');
       setReferralCode('');
     }, 1500);
@@ -178,30 +184,26 @@ export default function AuthScreen({
   return (
     <div className="min-h-screen bg-[#070b13] flex flex-col justify-center relative py-12 px-4 sm:px-6 lg:px-8 font-sans overflow-hidden">
       
-      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center space-y-4 relative z-10">
-        {/* Brand visual header */}
-        <motion.div 
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="inline-flex items-center gap-2 px-3 py-1 bg-blue-950/40 border border-blue-550/30 rounded-full backdrop-blur-md"
+      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center space-y-3 relative z-10">
+        {/* High-Fidelity Brand Logo */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="mb-2"
         >
-          <div className="w-5 h-5 rounded-md bg-[#0c1222] border border-blue-400 flex items-center justify-center text-white font-black text-xs shrink-0">
-            <span className="text-blue-400">X</span>
-          </div>
-          <span className="text-[9px] font-bold text-blue-300 uppercase tracking-widest font-mono">
-            XENA PREMIUM WEALTH
-          </span>
+          <XenaLogo size={100} showText={true} textSize="text-base" textTracking="tracking-[0.8em]" />
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, scale: 0.98 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.05, duration: 0.4 }}
+          initial={{ opacity: 0, y: 5 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1, duration: 0.4 }}
         >
-          <h2 className="text-3xl font-sans font-black text-white tracking-tight leading-none">
-            <span className="text-blue-400 font-black">X</span>ENA PREMIUM WEALTH
-          </h2>
-          <p className="mt-2 text-xs text-slate-400 font-semibold max-w-xs mx-auto leading-relaxed">
+          <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest font-mono">
+            PREMIUM WEALTH PLATFORM
+          </p>
+          <p className="mt-1.5 text-[11px] text-slate-500 font-medium max-w-xs mx-auto leading-relaxed font-mono">
             High-Yield Global Corporate Shares & Secured Multi-Asset Digital Vault.
           </p>
         </motion.div>
@@ -358,48 +360,69 @@ export default function AuthScreen({
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-4">
                     <div>
-                      <label className="block text-[10px] uppercase font-black text-slate-400 tracking-wider mb-1.5 flex items-center gap-1 flex-nowrap truncate">
-                        <Landmark className="w-3.5 h-3.5 text-purple-500 shrink-0" /> Receiving Bank
+                      <label className="block text-[10px] uppercase font-black text-slate-400 tracking-wider mb-1.5 flex items-center gap-1.5">
+                        <Globe className="w-3.5 h-3.5 text-purple-500" /> Country of Residence
                       </label>
                       <select
-                        id="signup-bank"
-                        value={bankName}
-                        onChange={(e) => setBankName(e.target.value)}
+                        id="signup-country"
+                        value={country}
+                        onChange={(e) => setCountry(e.target.value)}
                         className="w-full px-3 py-3 bg-slate-950 border border-slate-800 rounded-xl text-xs font-semibold text-white focus:outline-none cursor-pointer"
                       >
-                        <option className="bg-slate-950">Access Bank</option>
-                        <option className="bg-slate-950">Zenith Bank</option>
-                        <option className="bg-slate-950">GTBank</option>
-                        <option className="bg-slate-950">UBA Plc</option>
-                        <option className="bg-slate-950">Fidelity Bank</option>
-                        <option className="bg-slate-950">First Bank of Nigeria</option>
-                        <option className="bg-slate-950">OPay</option>
-                        <option className="bg-slate-950">PalmPay</option>
-                        <option className="bg-slate-950">Moniepoint Microfinance</option>
-                        <option className="bg-slate-950">Kuda Bank</option>
+                        <option className="bg-slate-950">Nigeria</option>
+                        <option className="bg-slate-950">Ghana</option>
+                        <option className="bg-slate-950">Kenya</option>
+                        <option className="bg-slate-950">South Africa</option>
+                        <option className="bg-slate-950">United Kingdom</option>
+                        <option className="bg-slate-950">United States</option>
+                        <option className="bg-slate-950">Canada</option>
+                        <option className="bg-slate-950">Germany</option>
+                        <option className="bg-slate-950">United Arab Emirates</option>
+                        <option className="bg-slate-950">India</option>
+                        <option className="bg-slate-950">Australia</option>
+                        <option className="bg-slate-950">Other</option>
                       </select>
                     </div>
-                    <div>
-                      <label className="block text-[10px] uppercase font-black text-slate-400 tracking-wider mb-1.5 flex items-center gap-1">
-                        NUBAN Account
-                      </label>
-                      <input
-                        id="signup-nuban"
-                        type="text"
-                        maxLength={10}
-                        required
-                        value={accountNumber}
-                        onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, ''))}
-                        placeholder="10 Digits"
-                        className="w-full px-4 py-3 bg-slate-950 border border-slate-800 focus:border-purple-550/80 focus:ring-1 focus:ring-purple-550 rounded-xl text-xs font-semibold text-white focus:outline-none transition-all placeholder:text-slate-600"
-                      />
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[10px] uppercase font-black text-slate-400 tracking-wider mb-1.5 flex items-center gap-1">
+                          <FileText className="w-3.5 h-3.5 text-purple-500 shrink-0" /> KYC ID Document
+                        </label>
+                        <select
+                          id="signup-kyc-type"
+                          value={kycIdType}
+                          onChange={(e) => setKycIdType(e.target.value)}
+                          className="w-full px-3 py-3 bg-slate-950 border border-slate-800 rounded-xl text-xs font-semibold text-white focus:outline-none cursor-pointer"
+                        >
+                          <option className="bg-slate-950">National ID / NIN</option>
+                          <option className="bg-slate-950">International Passport</option>
+                          <option className="bg-slate-950">Driver's License</option>
+                          <option className="bg-slate-950">Voter's Card</option>
+                          <option className="bg-slate-950">Social Security / State ID</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] uppercase font-black text-slate-400 tracking-wider mb-1.5 flex items-center gap-1">
+                          Document ID Number
+                        </label>
+                        <input
+                          id="signup-kyc-number"
+                          type="text"
+                          required
+                          value={kycIdNumber}
+                          onChange={(e) => setKycIdNumber(e.target.value)}
+                          placeholder="e.g. A12345678"
+                          className="w-full px-4 py-3 bg-slate-950 border border-slate-800 focus:border-purple-550/80 focus:ring-1 focus:ring-purple-550 rounded-xl text-xs font-semibold text-white focus:outline-none transition-all placeholder:text-slate-600"
+                        />
+                      </div>
                     </div>
                   </div>
 
                   <p className="text-[9px] text-purple-400 bg-purple-950/20 p-2.5 border border-purple-900/30 rounded-xl font-bold leading-normal text-left">
-                    💡 Receiving bank credentials can be instantly modified inside of your shareholder profile dashboard settings.
+                    💡 Your KYC and identity status are secured via global distributed ledger technology. Verified status is granted instantly.
                   </p>
 
                   <div>
@@ -442,7 +465,7 @@ export default function AuthScreen({
                         className="mt-0.5 h-4 w-4 bg-slate-950 border border-slate-800 rounded checked:bg-purple-600 checked:border-purple-600 text-purple-600 focus:ring-purple-500"
                       />
                       <span className="text-[10px] text-slate-400 font-semibold leading-normal">
-                        I accept the <span className="text-purple-400 font-extrabold underline">Shareholder Terms & Conditions</span>, XENA INVESTMENT LTD investment policies, and guarantee my withdrawal payment bank details are authentic.
+                        I accept the <span className="text-purple-400 font-extrabold underline">Shareholder Terms & Conditions</span>, XENA INVESTMENT LTD investment policies, and guarantee my official identity KYC details are authentic.
                       </span>
                     </label>
                   </div>

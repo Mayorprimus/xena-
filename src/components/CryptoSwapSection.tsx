@@ -28,10 +28,14 @@ import {
   QrCode,
   Eye,
   EyeOff,
-  ChevronRight
+  ChevronRight,
+  Scan,
+  X
 } from 'lucide-react';
 import { UserWallet, Transaction } from '../types';
 import { formatNGN, generateRef } from '../utils';
+import QrCodeDisplay from './QrCodeDisplay';
+import QrCodeScannerModal from './QrCodeScannerModal';
 import { 
   AreaChart, 
   XAxis, 
@@ -100,6 +104,8 @@ export default function CryptoSwapSection({
   onAddTransaction 
 }: CryptoSwapSectionProps) {
   
+  const userUid = wallet.uid || `XENA-${wallet.referralCode?.split('-').pop() || '49104'}`;
+
   // Wallet state
   const [showBalances, setShowBalances] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<'overview' | 'swap' | 'p2p' | 'receive'>('overview');
@@ -123,6 +129,8 @@ export default function CryptoSwapSection({
   const [p2pSearchError, setP2pSearchError] = useState<string>('');
   const [p2pTransferStep, setP2pTransferStep] = useState<'idle' | 'transmitting' | 'success'>('idle');
   const [p2pSuccessMsg, setP2pSuccessMsg] = useState<string>('');
+  const [isScannerOpen, setIsScannerOpen] = useState<boolean>(false);
+  const [showMyQrModal, setShowMyQrModal] = useState<boolean>(false);
 
   // Asset Context Modal (Mobile Action Drawer)
   const [activeAssetDrawer, setActiveAssetDrawer] = useState<AssetCode | null>(null);
@@ -130,12 +138,12 @@ export default function CryptoSwapSection({
   // Dynamic Address generation based on User UID for realism
   const addresses: Record<AssetCode, string> = {
     NGN: 'NUBAN-' + wallet.accountNumber.split('|')[0],
-    XNC: 'xen_v2_' + (wallet.uid || 'xna49104').toLowerCase() + 'bfef94ef',
-    USDT: 'usdt_trc20_' + (wallet.uid || 'xna49104').toLowerCase() + 'bb7201c1',
-    SOL: 'sol_spl_' + (wallet.uid || 'xna49104').toLowerCase() + '7f294efa',
-    BNB: 'bsc_bep20_' + (wallet.uid || 'xna49104').toLowerCase() + 'cc2379ff',
-    ETH: 'eth_erc20_' + (wallet.uid || 'xna49104').toLowerCase() + '00d11fca',
-    BTC: 'btc_segwit_' + (wallet.uid || 'xna49104').toLowerCase() + '99b2e04f'
+    XNC: 'xen_v2_' + userUid.toLowerCase() + 'bfef94ef',
+    USDT: 'usdt_trc20_' + userUid.toLowerCase() + 'bb7201c1',
+    SOL: 'sol_spl_' + userUid.toLowerCase() + '7f294efa',
+    BNB: 'bsc_bep20_' + userUid.toLowerCase() + 'cc2379ff',
+    ETH: 'eth_erc20_' + userUid.toLowerCase() + '00d11fca',
+    BTC: 'btc_segwit_' + userUid.toLowerCase() + '99b2e04f'
   };
 
   // Live updated Balances mapping
@@ -428,7 +436,7 @@ export default function CryptoSwapSection({
       return;
     }
 
-    if (query === wallet.uid?.toUpperCase()) {
+    if (query === userUid.toUpperCase()) {
       setP2pSearchError('P2P transfers to your own active UID are restricted.');
       return;
     }
@@ -564,13 +572,13 @@ export default function CryptoSwapSection({
       {/* 1. Header Portfolio Balance Display Card (High-end Glassmorphism) */}
       <div className="bg-[#0b0e14] border border-slate-800 rounded-3xl p-6 relative overflow-hidden shadow-2xl">
         <div className="absolute top-0 right-0 w-80 h-80 bg-blue-500/10 rounded-full blur-[120px] pointer-events-none" />
-        <div className="absolute -bottom-10 -left-10 w-60 h-60 bg-emerald-500/5 rounded-full blur-[90px] pointer-events-none" />
+        <div className="absolute -bottom-10 -left-10 w-60 h-60 bg-blue-500/5 rounded-full blur-[90px] pointer-events-none" />
         
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <p className="text-[10px] text-emerald-400 uppercase font-mono font-black tracking-widest">
+              <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
+              <p className="text-[10px] text-blue-400 uppercase font-mono font-black tracking-widest">
                 XENA SECURED CLIENT VAULT
               </p>
             </div>
@@ -589,9 +597,27 @@ export default function CryptoSwapSection({
                 {showBalances ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
-            <p className="text-[10.5px] text-slate-400 font-bold font-mono">
-              Account Primary UID: <span className="text-blue-400 font-black uppercase">{wallet.uid || 'PENDING'}</span>
-            </p>
+            <div className="flex items-center gap-2 mt-1.5 p-1.5 px-3 bg-slate-900/60 border border-slate-800 rounded-xl w-fit">
+              <span className="text-[10px] text-slate-400 font-mono font-bold">XENA SHAREHOLDER ID:</span>
+              <strong className="text-xs text-blue-400 font-mono font-black uppercase tracking-wider">{userUid}</strong>
+              <button
+                onClick={() => handleCopy(userUid)}
+                className="p-1 text-slate-400 hover:text-white transition-all cursor-pointer flex items-center gap-1 text-[9px] font-mono font-extrabold uppercase bg-slate-950 border border-slate-800 hover:border-slate-700 rounded px-1.5 ml-1"
+                title="Copy Shareholder ID"
+              >
+                {copiedAddress === userUid ? (
+                  <>
+                    <Check className="w-3 h-3 text-blue-400 shrink-0" />
+                    <span className="text-blue-400 text-[8.5px]">Copied</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3 h-3 shrink-0" />
+                    <span>Copy</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
 
           {/* Quick round buttons for instant sub-selection (highly mobile-friendly layout) */}
@@ -632,7 +658,7 @@ export default function CryptoSwapSection({
                   : 'bg-slate-900/40 border-slate-800 hover:border-slate-700 text-slate-300'
               }`}
             >
-              <div className="w-9 h-9 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-emerald-455 text-emerald-400">
+              <div className="w-9 h-9 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-blue-400">
                 <Send className="w-4 h-4" />
               </div>
               <span className="text-[9.5px] font-black uppercase tracking-wider">Transfer</span>
@@ -692,7 +718,7 @@ export default function CryptoSwapSection({
 
                     // Colored coin symbol backgrounds
                     const coinBgMap: Record<AssetCode, string> = {
-                      NGN: 'bg-emerald-950/80 text-emerald-400 border border-emerald-900/40',
+                      NGN: 'bg-blue-950/80 text-blue-400 border border-blue-900/40',
                       XNC: 'bg-gradient-to-br from-indigo-900/90 to-purple-800/90 text-purple-300 border border-purple-800/50 animate-pulse',
                       BTC: 'bg-amber-950/70 text-amber-500 border border-amber-900/30',
                       ETH: 'bg-indigo-950/70 text-indigo-400 border border-indigo-900/30',
@@ -740,7 +766,7 @@ export default function CryptoSwapSection({
                             <span className="text-slate-450 font-bold">
                               {showBalances ? formatNGN(valInNaira) : '₦ ••••'}
                             </span>
-                            <span className={`font-bold ${trend.isPositive ? 'text-emerald-450' : 'text-rose-400'}`}>
+                            <span className={`font-bold ${trend.isPositive ? 'text-blue-400' : 'text-rose-400'}`}>
                               {trend.change}
                             </span>
                           </div>
@@ -882,7 +908,7 @@ export default function CryptoSwapSection({
                       </div>
                       <div className="flex justify-between font-semibold">
                         <span className="text-slate-500">Gas/Swap Brokerage Fee:</span>
-                        <span className="font-mono text-emerald-400 font-extrabold">₦0.00 SPONSORED BY XENA</span>
+                        <span className="font-mono text-blue-400 font-extrabold">₦0.00 SPONSORED BY XENA</span>
                       </div>
                     </div>
 
@@ -895,12 +921,12 @@ export default function CryptoSwapSection({
                     </button>
                   </div>
                 ) : swapStep === 'success' ? (
-                  <div className="p-6 bg-emerald-950/20 border border-emerald-900/30 text-emerald-400 rounded-2xl text-center space-y-4 font-sans">
-                    <div className="mx-auto w-12 h-12 bg-emerald-500 text-white rounded-full flex items-center justify-center shadow-lg">
+                  <div className="p-6 bg-blue-950/20 border border-blue-900/30 text-blue-400 rounded-2xl text-center space-y-4 font-sans">
+                    <div className="mx-auto w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center shadow-lg">
                       <Check className="w-6 h-6 stroke-[3.5]" />
                     </div>
                     <div>
-                      <h4 className="text-lg font-black uppercase text-emerald-400 tracking-wider">Order Settled</h4>
+                      <h4 className="text-lg font-black uppercase text-blue-400 tracking-wider">Order Settled</h4>
                       <p className="text-xs text-slate-300 leading-relaxed font-semibold max-w-sm mx-auto mt-2">{successInfo}</p>
                     </div>
                     <div className="p-3 bg-black/60 border border-slate-800 rounded-xl space-y-1 text-left font-mono text-[9.5px] text-slate-300">
@@ -946,7 +972,7 @@ export default function CryptoSwapSection({
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="bg-[#0b0e14] border border-slate-800/80 rounded-3xl p-6 relative overflow-hidden shadow-xl"
+                className="bg-[#0b0e14] border border-slate-800/80 rounded-3xl p-6 relative overflow-hidden shadow-2xl"
               >
                 <div className="absolute top-0 right-0 w-48 h-48 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
                 
@@ -962,36 +988,74 @@ export default function CryptoSwapSection({
                 </div>
 
                 {p2pTransferStep === 'idle' ? (
-                  <div className="space-y-4 mt-4">
+                  <div className="space-y-5 mt-5">
                     
-                    {/* ASSET SELECTION FOR TRANSFER */}
-                    <div className="p-4 bg-black/40 border border-slate-800/80 rounded-2xl space-y-2">
+                    {/* ASSET SELECTION GRID */}
+                    <div className="space-y-2.5">
                       <label className="text-[10.5px] font-black uppercase text-slate-400 tracking-wide block">
                         Select Asset to Transfer
                       </label>
-                      <select
-                        value={p2pTransferAsset}
-                        onChange={(e) => {
-                          setP2pTransferAsset(e.target.value as AssetCode);
-                          setP2pAmount('');
-                        }}
-                        className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl py-2.5 px-3.5 text-xs font-mono font-black focus:outline-hidden text-left"
-                      >
-                        {(['XNC', 'BTC', 'ETH', 'SOL', 'BNB', 'USDT', 'NGN'] as AssetCode[]).map((coin) => (
-                          <option key={coin} value={coin} className="bg-[#0b0e14]">{coin} - Available: {balances[coin].toLocaleString('en-US', { maximumFractionDigits: 6 })} {coin}</option>
-                        ))}
-                      </select>
+                      <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                        {(['XNC', 'USDT', 'NGN', 'SOL', 'BTC', 'ETH', 'BNB'] as AssetCode[]).map((coin) => {
+                          const isSelected = p2pTransferAsset === coin;
+                          return (
+                            <button
+                              key={coin}
+                              type="button"
+                              onClick={() => {
+                                setP2pTransferAsset(coin);
+                                setP2pAmount('');
+                              }}
+                              className={`p-2.5 rounded-xl border text-left transition-all relative overflow-hidden flex flex-col justify-between cursor-pointer ${
+                                isSelected
+                                  ? 'border-blue-500 bg-blue-600/10 shadow-[0_0_12px_rgba(59,130,246,0.2)]'
+                                  : 'border-slate-850 bg-[#0e121a]/60 hover:bg-[#0e121a] hover:border-slate-800'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className={`text-[10.5px] font-black uppercase tracking-wider ${isSelected ? 'text-blue-400' : 'text-slate-400'}`}>
+                                  {coin}
+                                </span>
+                                {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />}
+                              </div>
+                              <div className="mt-2 text-[11px] font-mono font-bold text-white truncate">
+                                {balances[coin].toLocaleString('en-US', { maximumFractionDigits: 4 })}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
 
                     {/* Recipient locator UID */}
                     <div className="p-4 bg-black/35 border border-slate-800/80 rounded-2xl space-y-3 relative">
-                      <label className="text-[10.5px] font-black uppercase text-slate-400 tracking-wide block">
-                        Verified Recipient Wallet UID
-                      </label>
+                      <div className="flex justify-between items-center mb-1.5">
+                        <label className="text-[10.5px] font-black uppercase text-slate-400 tracking-wide block">
+                          Verified Recipient Wallet UID
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setIsScannerOpen(true)}
+                            className="flex items-center gap-1.5 text-[10px] text-blue-400 hover:text-blue-300 font-black uppercase transition-all cursor-pointer bg-blue-500/5 px-2.5 py-1 rounded border border-blue-500/15"
+                          >
+                            <Scan className="w-3 h-3" />
+                            Scan QR
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setShowMyQrModal(true)}
+                            className="flex items-center gap-1.5 text-[10px] text-purple-400 hover:text-purple-300 font-black uppercase transition-all cursor-pointer bg-purple-500/5 px-2.5 py-1 rounded border border-purple-500/15"
+                          >
+                            <QrCode className="w-3 h-3" />
+                            My QR
+                          </button>
+                        </div>
+                      </div>
                       
                       <div className="flex gap-2">
                         <div className="relative flex-1">
-                          <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500 font-bold">
+                          <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500 font-bold">
                             <Search className="w-4 h-4" />
                           </span>
                           <input
@@ -1003,7 +1067,7 @@ export default function CryptoSwapSection({
                               setP2pSearchError('');
                             }}
                             className="w-full bg-slate-900 border border-slate-800 rounded-xl py-2.5 pl-10 pr-3 text-xs font-mono font-bold tracking-widest placeholder-slate-600 text-white focus:outline-hidden focus:ring-1 focus:ring-blue-500/40"
-                            placeholder="E.G. XNA-99231 OR SEARCH BY NAME"
+                            placeholder="E.G. XENA-23453 OR SEARCH BY NAME"
                           />
 
                           {/* Predictive instant search overlay dropdown */}
@@ -1012,13 +1076,13 @@ export default function CryptoSwapSection({
                               const suggestions = registeredUsers.filter(u => 
                                 ((u.uid || '').toUpperCase().includes(p2pUid.trim().toUpperCase()) ||
                                  (u.fullName || '').toUpperCase().includes(p2pUid.trim().toUpperCase())) &&
-                                (u.uid || '').toUpperCase() !== (wallet.uid || '').toUpperCase()
+                                (u.uid || '').toUpperCase() !== userUid.toUpperCase()
                               ).slice(0, 5);
 
                               if (suggestions.length === 0) return null;
 
                               return (
-                                <div className="absolute z-20 left-0 right-0 mt-1.5 bg-[#0b0e14] border border-slate-800 rounded-xl overflow-hidden divide-y divide-slate-850/65 shadow-2xl">
+                                <div className="absolute z-20 left-0 right-0 mt-1.5 bg-[#0b0e14] border border-slate-850 rounded-xl overflow-hidden divide-y divide-slate-850/65 shadow-2xl">
                                   <div className="p-2 py-1 bg-[#101424] text-[8px] font-black text-blue-400 uppercase tracking-widest block font-mono">
                                     MATCHED SHAREHOLDERS ({suggestions.length})
                                   </div>
@@ -1051,34 +1115,52 @@ export default function CryptoSwapSection({
                         <button
                           type="button"
                           onClick={handleSearchRecipientByUid}
-                          className="px-4 py-2.5 bg-blue-600 hover:bg-blue-750 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer"
+                          className="px-4.5 py-2.5 bg-blue-600 hover:bg-blue-750 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer shadow-md"
                         >
                           Locate
                         </button>
                       </div>
 
                       {p2pSearchError && (
-                        <div className="text-[10px] text-rose-450 bg-rose-950/20 border border-rose-900/30 p-2.5 rounded-xl font-semibold">
+                        <div className="text-[10px] text-rose-400 bg-rose-950/20 border border-rose-900/30 p-2.5 rounded-xl font-semibold">
                           ⚠️ {p2pSearchError}
                         </div>
                       )}
 
                       {searchedUser && (
-                        <div className="p-3 bg-emerald-950/20 border border-emerald-900/30 text-emerald-400 rounded-xl space-y-1 text-left font-sans">
-                          <div className="flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-450 animate-ping shrink-0" />
-                            <span className="text-[10px] uppercase font-black font-mono tracking-widest">Matched Active Shareholder</span>
+                        <motion.div 
+                          initial={{ opacity: 0, scale: 0.98 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          className="p-3.5 bg-gradient-to-r from-blue-950/30 to-indigo-950/30 border border-blue-500/20 text-blue-450 rounded-xl space-y-3.5 text-left relative overflow-hidden shadow-inner font-sans"
+                        >
+                          <div className="absolute top-0 right-0 p-3 opacity-15">
+                            <User className="w-16 h-16 text-blue-400" />
                           </div>
-                          <div className="grid grid-cols-2 gap-2 text-[10px] font-mono mt-1 text-slate-300">
-                            <div><span className="text-slate-500 text-[8.5px] block font-sans">NAME</span> <strong className="text-white font-bold text-xs">{searchedUser.fullName}</strong></div>
-                            <div><span className="text-slate-500 text-[8.5px] block font-sans">UID LEAF</span> <strong className="text-blue-400 font-bold block">{searchedUser.uid}</strong></div>
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 font-mono font-black text-xs shrink-0">
+                              {searchedUser.fullName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                            </div>
+                            <div>
+                              <span className="text-[9px] uppercase font-black font-mono tracking-widest text-slate-500 block">Verified Active Recipient</span>
+                              <strong className="text-white font-black text-sm block leading-tight">{searchedUser.fullName}</strong>
+                            </div>
                           </div>
-                        </div>
+                          <div className="grid grid-cols-2 gap-4 text-[10.5px] font-mono border-t border-blue-900/30 pt-2.5 mt-2">
+                            <div>
+                              <span className="text-slate-500 text-[8.5px] block font-sans font-extrabold">UID LEAF NODE</span> 
+                              <span className="text-blue-300 font-bold block truncate">{searchedUser.uid}</span>
+                            </div>
+                            <div>
+                              <span className="text-slate-500 text-[8.5px] block font-sans font-extrabold">RECIPIENT EMAIL</span> 
+                              <span className="text-slate-300 font-bold block truncate">{searchedUser.email}</span>
+                            </div>
+                          </div>
+                        </motion.div>
                       )}
                     </div>
 
                     {/* Quantity To Send Input */}
-                    <div className="p-4 bg-black/40 border border-slate-800/80 rounded-2xl space-y-2">
+                    <div className="p-4 bg-black/40 border border-slate-800/80 rounded-2xl space-y-2.5">
                       <div className="flex justify-between items-center text-xs">
                         <span className="text-slate-400 font-bold">Transfer Quantity</span>
                         <span className="text-slate-500 font-mono font-medium">
@@ -1098,10 +1180,46 @@ export default function CryptoSwapSection({
                         <button
                           type="button"
                           onClick={() => setP2pAmount(String(balances[p2pTransferAsset]))}
-                          className="px-2.5 py-1 bg-slate-900 border border-slate-800 text-[10px] font-black font-mono text-slate-405 hover:text-white rounded-lg transition-all"
+                          className="px-2.5 py-1 bg-slate-900 border border-slate-800 text-[10px] font-black font-mono text-slate-400 hover:text-white rounded-lg transition-all"
                         >
                           MAX
                         </button>
+                      </div>
+
+                      {/* Percentage Chips */}
+                      <div className="flex gap-1.5 pt-1">
+                        {[0.25, 0.5, 0.75, 1].map((pct) => {
+                          const pctLabel = pct === 1 ? 'MAX' : `${pct * 100}%`;
+                          return (
+                            <button
+                              key={pct}
+                              type="button"
+                              onClick={() => {
+                                const calculated = (balances[p2pTransferAsset] * pct);
+                                setP2pAmount(calculated > 0 ? calculated.toFixed(5) : '');
+                              }}
+                              className="flex-1 py-1.5 px-1.5 bg-slate-900 border border-slate-850 hover:border-slate-700 hover:bg-slate-850 text-[9px] font-black font-mono text-slate-400 hover:text-white rounded-lg transition-all cursor-pointer text-center"
+                            >
+                              {pctLabel}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* TRANSACTION METRICS BREAKDOWN */}
+                    <div className="p-3.5 bg-[#080b0f] border border-slate-800/60 rounded-2xl space-y-2.5 text-[11px] font-medium font-sans text-slate-400 shadow-inner">
+                      <div className="flex justify-between">
+                        <span>Ledger Protocol Fee</span>
+                        <span className="text-emerald-400 font-black font-mono uppercase tracking-wider">0.00 {p2pTransferAsset} (FREE)</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Settlement Speed</span>
+                        <span className="text-blue-400 font-black font-mono">INSTANT (&lt; 2s)</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Security Level</span>
+                        <span className="text-purple-400 font-black font-mono uppercase tracking-wider">End-to-End Encrypted</span>
                       </div>
                     </div>
 
@@ -1114,12 +1232,12 @@ export default function CryptoSwapSection({
                     </button>
                   </div>
                 ) : p2pTransferStep === 'success' ? (
-                  <div className="p-6 bg-emerald-950/20 border border-emerald-900/30 text-emerald-400 rounded-2xl text-center space-y-4 font-sans">
-                    <div className="mx-auto w-12 h-12 bg-emerald-500 text-white rounded-full flex items-center justify-center shadow-lg animate-bounce">
+                  <div className="p-6 bg-blue-950/20 border border-blue-900/30 text-blue-400 rounded-2xl text-center space-y-4 font-sans">
+                    <div className="mx-auto w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center shadow-lg animate-bounce">
                       <Check className="w-5 h-5 stroke-[4.0]" />
                     </div>
                     <div>
-                      <h4 className="text-lg font-black uppercase text-emerald-400 tracking-wider">P2P Ledger Settled</h4>
+                      <h4 className="text-lg font-black uppercase text-blue-400 tracking-wider">P2P Ledger Settled</h4>
                       <p className="text-xs text-slate-350 leading-relaxed font-semibold max-w-xs mx-auto mt-2">{p2pSuccessMsg}</p>
                     </div>
                     <button 
@@ -1199,8 +1317,8 @@ export default function CryptoSwapSection({
                           >
                             {copiedAddress === addr ? (
                               <>
-                                <Check className="w-3 h-3 text-emerald-450" />
-                                <span className="text-emerald-450">Copied</span>
+                                <Check className="w-3 h-3 text-blue-400" />
+                                <span className="text-blue-400">Copied</span>
                               </>
                             ) : (
                               <>
@@ -1295,8 +1413,8 @@ export default function CryptoSwapSection({
 
             <div className="flex justify-between items-center text-[9px] text-slate-500 font-mono mt-1 pt-1">
               <span>Stable Reference Node</span>
-              <span className="text-emerald-450 font-bold flex items-center gap-1 uppercase tracking-wider text-[8px]">
-                <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-ping shrink-0" />
+              <span className="text-blue-400 font-bold flex items-center gap-1 uppercase tracking-wider text-[8px]">
+                <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-ping shrink-0" />
                 Live Sync Feed
               </span>
             </div>
@@ -1381,7 +1499,7 @@ export default function CryptoSwapSection({
                   <p className="text-xl font-black font-mono tracking-tight text-white">
                     {bal.toLocaleString('en-US', { maximumFractionDigits: 6 })} {coin}
                   </p>
-                  <p className="text-xs text-emerald-450 font-mono font-bold">
+                  <p className="text-xs text-blue-400 font-mono font-bold">
                     ≈ {formatNGN(nairaValue)} Valuation
                   </p>
                 </div>
@@ -1434,7 +1552,7 @@ export default function CryptoSwapSection({
                       onClick={() => handleCopy(addresses[coin])}
                       className="shrink-0 text-slate-305 hover:text-white transition-all cursor-pointer"
                     >
-                      {copiedAddress === addresses[coin] ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                      {copiedAddress === addresses[coin] ? <Check className="w-3 h-3 text-blue-400" /> : <Copy className="w-3 h-3" />}
                     </button>
                   </div>
                 </div>
@@ -1449,6 +1567,58 @@ export default function CryptoSwapSection({
             </motion.div>
           );
         })()}
+      </AnimatePresence>
+
+      {/* 1. QR CODE SCANNER MODAL */}
+      <AnimatePresence>
+        {isScannerOpen && (
+          <QrCodeScannerModal
+            isOpen={isScannerOpen}
+            onClose={() => setIsScannerOpen(false)}
+            registeredUsers={registeredUsers}
+            currentWallet={wallet}
+            onScanSuccess={(scannedUid) => {
+              setP2pUid(scannedUid);
+              // Trigger a simulated search to instantly bind the recipient
+              const found = registeredUsers.find(
+                (u) => (u.uid || '').toUpperCase() === scannedUid.toUpperCase()
+              );
+              if (found) {
+                setSearchedUser(found);
+                setP2pSearchError('');
+              }
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* 2. MY PERSONAL QR CARD MODAL */}
+      <AnimatePresence>
+        {showMyQrModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-sm"
+            >
+              <div className="flex justify-end mb-2">
+                <button
+                  onClick={() => setShowMyQrModal(false)}
+                  className="p-1.5 bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white rounded-lg transition-all cursor-pointer border border-slate-800"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <QrCodeDisplay
+                value={userUid}
+                name={wallet.fullName}
+                email={wallet.email}
+                size={220}
+              />
+            </motion.div>
+          </div>
+        )}
       </AnimatePresence>
 
     </div>

@@ -33,7 +33,7 @@ export default function StatsGrid({ wallet, onOpenModal, activeInvestments = [] 
     nextTier = '';
     minThreshold = 15000000;
     nextThreshold = 15005000;
-    tierGradient = 'from-emerald-950/40 via-cyan-950/20 to-zinc-950';
+    tierGradient = 'from-blue-950/40 via-cyan-950/20 to-zinc-950';
     textColor = 'text-cyan-400';
   } else if (invested >= 5000000) {
     currentTier = 'Platinum High-Net';
@@ -80,19 +80,19 @@ export default function StatsGrid({ wallet, onOpenModal, activeInvestments = [] 
         className={`relative overflow-hidden bg-gradient-to-r ${tierGradient} border border-slate-800/80 rounded-2xl p-4 md:p-5 shadow-lg text-left text-white`}
       >
         {/* Glow Effects */}
-        <div className="absolute -top-12 -left-12 w-48 h-48 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -top-12 -left-12 w-48 h-48 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-12 -right-12 w-48 h-48 bg-blue-500/5 rounded-full blur-2xl pointer-events-none" />
         
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5 font-sans">
           
           {/* Status Group */}
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-gradient-to-tr from-emerald-500 to-teal-400 rounded-xl text-slate-950 shadow shadow-emerald-500/20 shrink-0">
+            <div className="p-2.5 bg-gradient-to-tr from-blue-500 to-cyan-400 rounded-xl text-slate-950 shadow shadow-blue-500/20 shrink-0">
               <Award className="w-5 h-5" />
             </div>
             <div className="space-y-0.5">
               <div className="flex items-center gap-2">
-                <span className="text-[8px] font-black tracking-widest text-emerald-400 bg-emerald-400/10 px-1.5 py-0.5 rounded border border-emerald-500/20 font-mono">
+                <span className="text-[8px] font-black tracking-widest text-blue-400 bg-blue-400/10 px-1.5 py-0.5 rounded border border-blue-500/20 font-mono">
                   MEMBER DIVISION
                 </span>
                 <span className="text-[9px] text-zinc-400 font-bold font-mono">Active Capital: {formatNGN(invested)}</span>
@@ -102,33 +102,33 @@ export default function StatsGrid({ wallet, onOpenModal, activeInvestments = [] 
               </h3>
             </div>
           </div>
-
+ 
           {/* Real-time Progress Stepper (Compact version) */}
           {nextTier ? (
             <div className="space-y-1.5 md:max-w-xs w-full shrink-0">
               <div className="flex justify-between items-center text-[9px] font-semibold tracking-wider font-mono">
                 <span className="text-zinc-400 font-bold">Milestone: {percent.toFixed(0)}%</span>
-                <span className="text-emerald-400 font-bold">Next: {nextTier} ({formatNGN(nextThreshold)})</span>
+                <span className="text-blue-400 font-bold">Next: {nextTier} ({formatNGN(nextThreshold)})</span>
               </div>
               <div className="w-full bg-[#111726] h-1.5 rounded-full overflow-hidden p-[1px] border border-slate-800">
                 <motion.div 
-                  initial={{ width: 0 }}
-                  animate={{ width: `${percent}%` }}
-                  transition={{ duration: 1, ease: 'easeOut' }}
-                  className="h-full rounded-full bg-gradient-to-r from-emerald-500 via-teal-400 to-blue-500" 
+                   initial={{ width: 0 }}
+                   animate={{ width: `${percent}%` }}
+                   transition={{ duration: 1, ease: 'easeOut' }}
+                   className="h-full rounded-full bg-gradient-to-r from-blue-500 via-cyan-400 to-blue-650" 
                 />
               </div>
               <p className="text-[8.5px] text-[#8692a6] font-bold leading-none">Stake {formatNGN(remainingNeeded)} more to rank up in dividend class.</p>
             </div>
           ) : (
-            <div className="p-2 bg-emerald-950/40 border border-emerald-800/30 rounded-xl flex items-center gap-1.5 text-emerald-400 shrink-0">
+            <div className="p-2 bg-blue-950/40 border border-blue-800/30 rounded-xl flex items-center gap-1.5 text-blue-400 shrink-0">
               <Sparkles className="w-3.5 h-3.5 shrink-0 animate-pulse" />
               <span className="text-[9px] font-black uppercase tracking-wider font-mono">⭐ APEX DIVISION REACHED</span>
             </div>
           )}
         </div>
       </motion.div>
-
+ 
       {/* 2. Interactive Quick Multiplier Promo Banner */}
       <motion.div 
         initial={{ opacity: 0, scale: 0.98 }}
@@ -136,15 +136,15 @@ export default function StatsGrid({ wallet, onOpenModal, activeInvestments = [] 
         className="relative overflow-hidden bg-gradient-to-r from-[#0d1324] via-[#090d16] to-[#04060b] border border-slate-800/80 rounded-3xl p-5 md:p-6 shadow-xl flex flex-col md:flex-row items-stretch md:items-center justify-between gap-5 text-left"
       >
         <div className="absolute top-0 right-0 w-85 h-85 bg-blue-600/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
-        <div className="absolute bottom-0 left-0 w-45 h-45 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none -ml-10 -mb-10" />
-
+        <div className="absolute bottom-0 left-0 w-45 h-45 bg-blue-500/5 rounded-full blur-2xl pointer-events-none -ml-10 -mb-10" />
+ 
         <div className="flex gap-4 relative z-10">
-          <div className="p-3 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl text-emerald-400 shrink-0 self-start md:self-center shadow-lg">
+          <div className="p-3 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl text-blue-400 shrink-0 self-start md:self-center shadow-lg">
             <Sparkles className="w-5.5 h-5.5" />
           </div>
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="text-[10px] uppercase font-black tracking-widest text-emerald-400 bg-emerald-400/10 px-2.5 py-0.5 rounded-md border border-emerald-500/20 font-mono">
+              <span className="text-[10px] uppercase font-black tracking-widest text-blue-400 bg-blue-400/10 px-2.5 py-0.5 rounded-md border border-blue-500/20 font-mono">
                 ACTIVE MULTIPLIER
               </span>
               <span className="text-[9px] uppercase font-extrabold tracking-wider text-slate-400">
@@ -155,16 +155,16 @@ export default function StatsGrid({ wallet, onOpenModal, activeInvestments = [] 
               Maximize Passive Profit Payouts
             </h4>
             <p className="text-zinc-400 text-xs mt-0.5 max-w-xl leading-relaxed">
-              Experience modern global equities options. Acquire company shares starting at just <strong className="text-white">₦1,500</strong> to yield guaranteed daily dividends up to <span className="text-emerald-400 font-extrabold font-mono">26.67% daily</span>. Safe, insured and direct.
+              Experience modern global equities options. Acquire company shares starting at just <strong className="text-white">₦1,500</strong> to yield guaranteed daily dividends up to <span className="text-blue-400 font-extrabold font-mono">26.67% daily</span>. Safe, insured and direct.
             </p>
           </div>
         </div>
-
+ 
         <div className="flex gap-3 w-full md:w-auto shrink-0 relative z-10 border-t border-slate-850 md:border-t-0 pt-4 md:pt-0">
           <button
             id="btn-shortcut-deposit"
             onClick={() => onOpenModal('deposit')}
-            className="flex-1 md:flex-none px-5 py-3 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-black rounded-xl text-xs transition-all shadow-md cursor-pointer flex items-center justify-center gap-1.5 hover:-translate-y-0.5 active:translate-y-0"
+            className="flex-1 md:flex-none px-5 py-3 bg-blue-600 hover:bg-blue-500 text-white font-black rounded-xl text-xs transition-all shadow-md cursor-pointer flex items-center justify-center gap-1.5 hover:-translate-y-0.5 active:translate-y-0"
           >
             Deposit Capital
             <ArrowUpRight className="w-3.5 h-3.5 stroke-[3]" />

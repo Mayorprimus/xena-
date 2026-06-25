@@ -28,8 +28,8 @@ export default function TransactionHistory({ transactions }: TransactionHistoryP
     switch (status) {
       case 'completed':
         return (
-          <span className="bg-emerald-950/20 text-emerald-405 text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-emerald-900/30 inline-flex items-center gap-1 w-max">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Confirmed
+          <span className="bg-blue-950/20 text-blue-400 text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-blue-900/30 inline-flex items-center gap-1 w-max">
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-500" /> Confirmed
           </span>
         );
       case 'pending':
@@ -50,15 +50,15 @@ export default function TransactionHistory({ transactions }: TransactionHistoryP
   const getTxIcon = (type: string) => {
     switch (type) {
       case 'deposit':
-        return <div className="p-2 bg-emerald-950/40 rounded-xl text-emerald-400 border border-emerald-900/20"><ArrowDownLeft className="w-4 h-4" /></div>;
+        return <div className="p-2 bg-blue-950/40 rounded-xl text-blue-400 border border-blue-900/20"><ArrowDownLeft className="w-4 h-4" /></div>;
       case 'withdraw':
         return <div className="p-2 bg-rose-955/20 rounded-xl text-rose-400 border border-rose-900/20"><ArrowUpRight className="w-4 h-4" /></div>;
       case 'invest':
         return <div className="p-2 bg-blue-950/30 rounded-xl text-blue-400 border border-blue-900/20"><RefreshCw className="w-4 h-4 shrink-0 rotate-180" /></div>;
       case 'payout':
-        return <div className="p-2 bg-emerald-950/40 rounded-xl text-emerald-450 border border-emerald-900/20"><CheckCircle className="w-4 h-4" /></div>;
+        return <div className="p-2 bg-blue-950/40 rounded-xl text-blue-400 border border-blue-900/20"><CheckCircle className="w-4 h-4" /></div>;
       default:
-        return <div className="p-2 bg-emerald-950/40 rounded-xl text-emerald-400 border border-emerald-900/20"><CheckCircle className="w-4 h-4" /></div>;
+        return <div className="p-2 bg-blue-950/40 rounded-xl text-blue-400 border border-blue-900/20"><CheckCircle className="w-4 h-4" /></div>;
     }
   };
 
@@ -150,7 +150,7 @@ export default function TransactionHistory({ transactions }: TransactionHistoryP
                     {getStatusBadge(tx.status)}
                   </td>
                   <td className={`py-3.5 px-4 text-right font-black font-mono text-[13px] ${
-                    tx.type === 'withdraw' || tx.type === 'invest' ? 'text-slate-200' : 'text-emerald-400'
+                    tx.type === 'withdraw' || tx.type === 'invest' ? 'text-slate-200' : 'text-blue-400'
                   }`}>
                     {tx.type === 'withdraw' || tx.type === 'invest' ? '-' : '+'}{formatNGN(tx.amount)}
                   </td>

@@ -3,7 +3,7 @@ export interface UserWallet {
   investedBalance: number;
   withdrawnBalance: number;
   earnedBalance: number;
-  accountNumber: string;
+  accountNumber?: string;
   fullName: string;
   email: string;
   referralCode: string;
@@ -27,6 +27,11 @@ export interface UserWallet {
   uid?: string;
   loginStreak?: number;
   lastLoginDate?: string;
+  lastLoginTimestamp?: number;
+  country?: string;
+  kycIdType?: string;
+  kycIdNumber?: string;
+  kycStatus?: 'unverified' | 'pending' | 'verified';
 }
 
 export interface InvestmentProduct {

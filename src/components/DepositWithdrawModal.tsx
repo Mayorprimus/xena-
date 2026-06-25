@@ -118,13 +118,13 @@ export default function DepositWithdrawModal({
       const currentHour = simulatedDate.getHours();
       const allowByAdminOrRef = !!(adminApprovalSettings?.allowAnytimeWithdrawal || withdrawSource === 'referral');
       
-      if (!allowByAdminOrRef && (currentHour < 10 || currentHour >= 12)) {
+      if (!allowByAdminOrRef && (currentHour < 10 || currentHour >= 17)) {
         const timeString = simulatedDate.toLocaleTimeString('en-US', { 
           hour: '2-digit', 
           minute: '2-digit',
           second: '2-digit'
         });
-        setErrorMessage(`Withdrawal processing window is strictly limited from 10:00 AM to 12:00 PM daily. The current simulated platform time is ${timeString}. Please use the Virtual Time Machine on the Dashboard to leap forward to the 10:00 AM withdrawal hours!`);
+        setErrorMessage(`Withdrawal processing window is strictly limited from 10:00 AM to 5:00 PM daily. The current simulated platform time is ${timeString}. Please use the Virtual Time Machine on the Dashboard to leap forward to the 10:00 AM withdrawal hours!`);
         return false;
       }
 
@@ -343,7 +343,7 @@ export default function DepositWithdrawModal({
                   ) : adminApprovalSettings?.allowAnytimeWithdrawal ? (
                     <span className="text-purple-800 font-extrabold">🟢 Admin Override: 24/7 Global Express Withdrawals are currently open!</span>
                   ) : (
-                    <span>Payout compliance cycles process daily from <strong className="text-purple-600 font-bold">10:00 AM to 12:00 PM</strong>. Use the dashboard's <strong className="underline text-purple-700">Time Machine</strong> to advance the simulated hour.</span>
+                    <span>Payout compliance cycles process daily from <strong className="text-purple-600 font-bold">10:00 AM to 5:00 PM</strong>. Use the dashboard's <strong className="underline text-purple-700">Time Machine</strong> to advance the simulated hour.</span>
                   )}
                 </p>
               </div>

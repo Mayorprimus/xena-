@@ -73,7 +73,7 @@ export default function ProductCard({
         containerClass: 'bg-gradient-to-br from-[#102120] via-[#091312] to-[#050a0a] border border-teal-850/60 shadow-xl text-white hover:border-teal-400/60 hover:shadow-teal-900/5',
         badgeClass: 'text-teal-300 bg-teal-500/10 border border-teal-500/20',
         iconBg: 'bg-teal-500/15 border border-teal-550/30 text-teal-300',
-        payoutBtn: 'bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-400 hover:to-emerald-500 text-slate-955 font-black focus:ring-teal-300',
+        payoutBtn: 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white font-black focus:ring-blue-300',
         cardTitleColor: 'text-teal-50',
         decorColor: 'from-teal-500/10 to-transparent',
         tagline: 'Prestige Platinum Option',
@@ -180,14 +180,14 @@ export default function ProductCard({
               <span className="font-semibold text-slate-400 mt-0.5">Required Stake:</span>
               <div className="text-right">
                 <strong className="text-white font-extrabold block font-mono text-[14px]">₦{product.minAmount.toLocaleString()}</strong>
-                <span className="text-[10px] text-emerald-400 font-bold block">returns {formatNGN(product.minAmount * (1 + product.rate * product.termDays))}</span>
+                <span className="text-[10px] text-blue-400 font-bold block">returns {formatNGN(product.minAmount * (1 + product.rate * product.termDays))}</span>
               </div>
             </div>
             
             <div className="flex justify-between items-start text-xs text-slate-300 pt-2 border-t border-white/5">
               <span className="font-semibold text-slate-400 mt-0.5">Total Matured Yield:</span>
               <div className="text-right">
-                <span className="text-[10px] bg-emerald-500/15 text-emerald-350 border border-emerald-500/10 px-1.5 py-0.5 rounded font-black font-sans shrink-0 uppercase tracking-widest leading-none mt-0.5 inline-block">
+                <span className="text-[10px] bg-blue-500/15 text-blue-400 border border-blue-500/10 px-1.5 py-0.5 rounded font-black font-sans shrink-0 uppercase tracking-widest leading-none mt-0.5 inline-block">
                   {(product.rate * product.termDays * 100).toFixed(0)}% Maturity
                 </span>
                 <span className="text-[10px] text-zinc-400 font-medium block mt-1">Over {product.termDays} Days Locked Term</span>
@@ -199,7 +199,7 @@ export default function ProductCard({
           <div className="flex items-baseline justify-between pt-2.5 border-t border-white/5 mt-2">
             <div>
               <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest block">Daily Returns</span>
-              <span className="text-2.5xl font-black text-emerald-400 tracking-tight font-mono">{(product.rate * 100).toFixed(1)}%</span>
+              <span className="text-2.5xl font-black text-blue-400 tracking-tight font-mono">{(product.rate * 100).toFixed(1)}%</span>
             </div>
             <div className="text-right">
               <span className="text-[9px] font-black text-gray-450 uppercase tracking-widest block">Daily Dividends</span>
