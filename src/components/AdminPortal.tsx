@@ -54,6 +54,7 @@ interface AdminPortalProps {
     csNumber?: string;
     officialWhatsAppGroup?: string;
     minReferralWithdrawal?: number;
+    minNormalWithdrawal?: number;
     allowAnytimeWithdrawal?: boolean;
   };
   onSaveSettings: (settings: {
@@ -65,6 +66,7 @@ interface AdminPortalProps {
     csNumber?: string;
     officialWhatsAppGroup?: string;
     minReferralWithdrawal?: number;
+    minNormalWithdrawal?: number;
     allowAnytimeWithdrawal?: boolean;
   }) => void;
   onApproveDeposit: (txId: string) => void;
@@ -98,7 +100,7 @@ interface AdminPortalProps {
   onDeleteUser?: (email: string) => void;
   
   bonusCodes?: BonusCode[];
-  onAddBonusCode?: (code: string, rewardAmount: number, maxClaims: number) => void;
+  onAddBonusCode?: (code: string, rewardAmount: number, maxClaims: number, rewardType: 'money' | 'xnc') => void;
   onDeleteBonusCode?: (id: string) => void;
 }
 
@@ -151,6 +153,16 @@ export default function AdminPortal({
   const [shareholderSearch, setShareholderSearch] = useState('');
   const [shareholderFilter, setShareholderFilter] = useState<'all' | 'active' | 'flagged'>('all');
 
+  // Search states for different admin portal sections to filter users by name and email
+  const [userSelectorSearch, setUserSelectorSearch] = useState('');
+  const [depositSearch, setDepositSearch] = useState('');
+  const [investmentSearch, setInvestmentSearch] = useState('');
+  const [withdrawalSearch, setWithdrawalSearch] = useState('');
+  const [csSearch, setCsSearch] = useState('');
+  const [referralSearch, setReferralSearch] = useState('');
+  const [referralViewMode, setReferralViewMode] = useState<'feed' | 'grouped'>('grouped');
+  const [expandedSponsors, setExpandedSponsors] = useState<{[email: string]: boolean}>({});
+
   // Input editing states to manipulate user balances directly (for simulation and testing)
   const [editBalance, setEditBalance] = useState('');
   const [walletSuccessMsg, setWalletSuccessMsg] = useState('');
@@ -161,6 +173,7 @@ export default function AdminPortal({
   const [adminCsNumber, setAdminCsNumber] = useState(adminApprovalSettings.csNumber || '08158432605');
   const [adminGroupLink, setAdminGroupLink] = useState(adminApprovalSettings.officialWhatsAppGroup || 'https://chat.whatsapp.com/KHZgCi1h24154DqIIHz3VE');
   const [adminMinRefWithdrawal, setAdminMinRefWithdrawal] = useState(adminApprovalSettings.minReferralWithdrawal || 5000);
+  const [adminMinNormalWithdrawal, setAdminMinNormalWithdrawal] = useState(adminApprovalSettings.minNormalWithdrawal || 2000);
   const [settingsSuccessMsg, setSettingsSuccessMsg] = useState('');
 
   // Manual Approval Override States
@@ -176,6 +189,7 @@ export default function AdminPortal({
       setAdminCsNumber(adminApprovalSettings.csNumber || '08158432605');
       setAdminGroupLink(adminApprovalSettings.officialWhatsAppGroup || 'https://chat.whatsapp.com/KHZgCi1h24154DqIIHz3VE');
       setAdminMinRefWithdrawal(adminApprovalSettings.minReferralWithdrawal ?? 5000);
+      setAdminMinNormalWithdrawal(adminApprovalSettings.minNormalWithdrawal ?? 2000);
       setReqDepositApp(adminApprovalSettings.requireDepositApproval);
       setReqInvestApp(adminApprovalSettings.requireInvestmentApproval);
       setReqWithdrawApp(adminApprovalSettings.requireWithdrawalApproval);
@@ -201,6 +215,7 @@ export default function AdminPortal({
   const [newBonusCode, setNewBonusCode] = useState('');
   const [newBonusReward, setNewBonusReward] = useState('1000');
   const [newBonusMaxClaims, setNewBonusMaxClaims] = useState('100');
+  const [newBonusRewardType, setNewBonusRewardType] = useState<'money' | 'xnc'>('money');
   const [bonusAddSuccess, setBonusAddSuccess] = useState('');
 
   const handleLogin = (e: React.FormEvent) => {
@@ -355,6 +370,7 @@ export default function AdminPortal({
       csNumber: adminCsNumber,
       officialWhatsAppGroup: adminGroupLink,
       minReferralWithdrawal: Number(adminMinRefWithdrawal) || 5000,
+      minNormalWithdrawal: Number(adminMinNormalWithdrawal) || 2000,
       allowAnytimeWithdrawal: allowAnytimeWithdraw
     });
     setSettingsSuccessMsg('Platform policy settings successfully saved and deployed live!');
@@ -476,9 +492,35 @@ export default function AdminPortal({
 
               {/* Selector for specific users */}
               <div className="space-y-1.5 font-sans">
-                <label className="block text-[10px] uppercase font-black text-gray-450 tracking-wider">
-                  Select User Account to Manage:
-                </label>
+                <div className="flex justify-between items-center">
+                  <label className="block text-[10px] uppercase font-black text-gray-450 tracking-wider">
+                    Select User Account to Manage:
+                  </label>
+                  {userSelectorSearch && (
+                    <button 
+                      type="button"
+                      onClick={() => setUserSelectorSearch('')}
+                      className="text-[9px] text-purple-600 hover:underline cursor-pointer font-bold"
+                    >
+                      Clear Search
+                    </button>
+                  )}
+                </div>
+
+                {/* Direct Search Input for Users */}
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search name or email directly..."
+                    value={userSelectorSearch}
+                    onChange={(e) => setUserSelectorSearch(e.target.value)}
+                    className="w-full pl-8 pr-3 py-1.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:bg-white focus:border-purple-600 transition-colors"
+                  />
+                  <div className="absolute left-2.5 top-2">
+                    <User className="w-3.5 h-3.5 text-gray-400" />
+                  </div>
+                </div>
+
                 <select
                   id="admin-user-selector"
                   value={wallet.email}
@@ -490,11 +532,16 @@ export default function AdminPortal({
                   <option value="admin1234@gmail.com">
                     Corporate Admin (admin1234@gmail.com) • (Admin Office)
                   </option>
-                  {registeredUsers.map((user) => (
-                    <option key={user.email} value={user.email}>
-                      {user.fullName} ({user.email})
-                    </option>
-                  ))}
+                  {registeredUsers
+                    .filter((user) => {
+                      const q = userSelectorSearch.toLowerCase().trim();
+                      return !q || user.fullName.toLowerCase().includes(q) || user.email.toLowerCase().includes(q);
+                    })
+                    .map((user) => (
+                      <option key={user.email} value={user.email}>
+                        {user.fullName} ({user.email})
+                      </option>
+                    ))}
                 </select>
               </div>
 
@@ -530,6 +577,70 @@ export default function AdminPortal({
                   </div>
                 </div>
               </div>
+
+              {/* Selected User's Referrals List for Easy Approvals */}
+              {wallet.email && wallet.email !== 'admin1234@gmail.com' && (
+                <div className="p-4 bg-purple-50/35 border border-purple-100 rounded-2xl space-y-3 font-sans">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] uppercase font-black text-purple-700 tracking-wider block">
+                      Referrals from this Shareholder ({referralsList?.filter(r => r.referrerEmail.toLowerCase() === wallet.email.toLowerCase()).length || 0})
+                    </span>
+                    {referralsList?.filter(r => r.referrerEmail.toLowerCase() === wallet.email.toLowerCase() && r.status === 'pending').length > 0 && (
+                      <span className="text-[9px] font-bold text-amber-800 bg-amber-100 border border-amber-200 px-1.5 py-0.5 rounded-md animate-pulse">
+                        PENDING APPROVAL
+                      </span>
+                    )}
+                  </div>
+
+                  {(!referralsList || referralsList.filter(r => r.referrerEmail.toLowerCase() === wallet.email.toLowerCase()).length === 0) ? (
+                    <p className="text-[11px] text-gray-400 italic">No referrals associated with this account.</p>
+                  ) : (
+                    <div className="space-y-2.5 max-h-[220px] overflow-y-auto pr-1">
+                      {referralsList.filter(r => r.referrerEmail.toLowerCase() === wallet.email.toLowerCase()).map((ref) => (
+                        <div key={ref.id} className="p-2.5 bg-white border border-gray-150 rounded-xl space-y-2">
+                          <div className="flex justify-between items-start gap-1">
+                            <div>
+                              <p className="text-xs font-bold text-gray-900 leading-tight">{ref.referredName || 'Unknown User'}</p>
+                              <p className="text-[10px] text-gray-400 font-mono">{ref.referredEmail}</p>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-[10px] font-bold text-purple-700 font-mono block">₦{formatNGN(ref.amount)}</span>
+                              <span className={`inline-block text-[8px] uppercase font-black px-1.5 py-0.2 rounded border ${
+                                ref.status === 'approved'
+                                  ? 'bg-purple-50 text-purple-700 border-purple-150'
+                                  : ref.status === 'rejected'
+                                  ? 'bg-red-50 text-red-650 border-red-150'
+                                  : 'bg-yellow-50 text-yellow-750 border-yellow-150'
+                              }`}>
+                                {ref.status}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          {ref.status === 'pending' && (
+                            <div className="flex items-center gap-1.5 justify-end pt-1.5 border-t border-dashed border-gray-100">
+                              <button
+                                type="button"
+                                onClick={() => onDeclineReferral(ref.id)}
+                                className="px-2 py-1 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-[10px] font-black uppercase rounded-lg cursor-pointer transition-colors"
+                              >
+                                Reject
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => onApproveReferral(ref.id)}
+                                className="px-2.5 py-1 bg-purple-600 hover:bg-purple-700 text-white text-[10px] font-black uppercase rounded-lg cursor-pointer transition-colors"
+                              >
+                                Approve
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Security & Override Rules */}
               <div className="space-y-3 pt-3 border-t border-gray-150 font-sans">
@@ -1040,420 +1151,883 @@ export default function AdminPortal({
           </div>
 
           {!referralsList || referralsList.length === 0 ? (
-            <div className="text-center py-12 px-6 max-w-sm mx-auto space-y-2">
+            <div className="text-center py-12 px-6 max-w-sm mx-auto space-y-2 font-sans">
               <Gift className="w-10 h-10 text-purple-600 block mx-auto animate-pulse" />
               <h4 className="font-bold text-gray-900 text-sm">No referrals tracked yet</h4>
               <p className="text-xs text-gray-400 font-sans">Any brand-new signups containing specified active promo codes will register here for supervisor review.</p>
             </div>
           ) : (
-            <div className="space-y-6 divide-y divide-gray-150">
-              {referralsList.map((ref, idx) => {
-                const referrerUser = registeredUsers.find(
-                  u => u.email.toLowerCase() === ref.referrerEmail.toLowerCase()
-                );
-                const refereeUser = registeredUsers.find(
-                  u => u.email.toLowerCase() === ref.referredEmail.toLowerCase()
-                );
-                const referrerName = referrerUser ? referrerUser.fullName : 'Sponsor User';
-                const referrerRank = referrerUser ? (referrerUser.approvedLevel || 'Standard Member') : 'Standard Member';
+            <div className="space-y-4">
+              {/* Tab Switcher for Referral Views */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-gray-150 font-sans">
+                <span className="text-[10px] uppercase font-black text-gray-400 tracking-wider">
+                  View and Approve Referral Commissions
+                </span>
+                <div className="flex bg-gray-100 p-0.5 rounded-lg text-[10px] font-bold">
+                  <button
+                    type="button"
+                    onClick={() => setReferralViewMode('grouped')}
+                    className={`px-3 py-1 rounded-md transition-all cursor-pointer ${
+                      referralViewMode === 'grouped'
+                        ? 'bg-purple-600 text-white shadow-xs'
+                        : 'text-gray-500 hover:text-gray-800'
+                    }`}
+                  >
+                    Grouped by Sponsor
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setReferralViewMode('feed')}
+                    className={`px-3 py-1 rounded-md transition-all cursor-pointer ${
+                      referralViewMode === 'feed'
+                        ? 'bg-purple-600 text-white shadow-xs'
+                        : 'text-gray-500 hover:text-gray-800'
+                    }`}
+                  >
+                    All Signups Feed
+                  </button>
+                </div>
+              </div>
+
+              {referralViewMode === 'grouped' && (() => {
+                // Group referralsList by referrerEmail
+                const referralsBySponsor: { [email: string]: ReferralRelationship[] } = {};
+                referralsList.forEach((ref) => {
+                  const emailNorm = ref.referrerEmail.toLowerCase().trim();
+                  if (!referralsBySponsor[emailNorm]) {
+                    referralsBySponsor[emailNorm] = [];
+                  }
+                  referralsBySponsor[emailNorm].push(ref);
+                });
+
+                // For each sponsor, calculate metrics
+                const sponsorGroups = Object.keys(referralsBySponsor).map((email) => {
+                  const refs = referralsBySponsor[email];
+                  const pendingCount = refs.filter(r => r.status === 'pending').length;
+                  const approvedCount = refs.filter(r => r.status === 'approved').length;
+                  const rejectedCount = refs.filter(r => r.status === 'rejected').length;
+                  const totalReward = refs.reduce((acc, r) => acc + (r.amount || 0), 0);
+                  
+                  const sponsorUser = registeredUsers.find(
+                    u => u.email.toLowerCase() === email
+                  );
+
+                  return {
+                    email,
+                    refs,
+                    pendingCount,
+                    approvedCount,
+                    rejectedCount,
+                    totalReward,
+                    sponsorUser,
+                    sponsorName: sponsorUser ? sponsorUser.fullName : 'Sponsor User',
+                    sponsorCode: sponsorUser ? sponsorUser.referralCode : refs[0]?.referrerCode || 'N/A',
+                    sponsorRank: sponsorUser ? (sponsorUser.approvedLevel || 'Standard Member') : 'Standard Member',
+                  };
+                });
+
+                // Filter groups based on search query
+                const q = referralSearch.toLowerCase().trim();
+                const filteredGroups = sponsorGroups.filter((group) => {
+                  if (!q) return true;
+                  if (
+                    group.sponsorName.toLowerCase().includes(q) ||
+                    group.email.includes(q) ||
+                    group.sponsorCode.toLowerCase().includes(q)
+                  ) {
+                    return true;
+                  }
+                  return group.refs.some(
+                    ref => (ref.referredName && ref.referredName.toLowerCase().includes(q)) ||
+                           ref.referredEmail.toLowerCase().includes(q)
+                  );
+                });
+
+                // Sort so that sponsors with the most referrals (and pending ones) are at the top
+                filteredGroups.sort((a, b) => {
+                  if (a.pendingCount > 0 && b.pendingCount === 0) return -1;
+                  if (b.pendingCount > 0 && a.pendingCount === 0) return 1;
+                  return b.refs.length - a.refs.length;
+                });
 
                 return (
-                  <div key={ref.id} className={`space-y-3 font-sans text-xs ${idx > 0 ? 'pt-6' : ''}`}>
-                    {/* Status & Reward Badge Bar */}
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 bg-gray-50/50 p-2.5 rounded-xl border border-gray-100">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-[10px] font-black px-2.5 py-1 bg-purple-50 border border-purple-150 text-purple-800 rounded-md tracking-wide">
-                          REWARD: ₦{formatNGN(ref.amount)}
-                        </span>
-                        <span className={`text-[9.5px] uppercase font-black px-2.5 py-1 rounded-md tracking-wider border ${
-                          ref.status === 'approved' 
-                            ? 'bg-purple-50 text-purple-700 border-purple-150' 
-                            : ref.status === 'rejected'
-                            ? 'bg-red-50 text-red-650 border-red-150'
-                            : 'bg-yellow-50 text-yellow-750 border-yellow-150 animate-pulse'
-                        }`}>
-                          STATUS: {ref.status.toUpperCase()}
-                        </span>
-                        <span className="text-[10px] text-gray-400 font-mono">Ledger ID: {ref.id}</span>
-                      </div>
-                      <span className="text-[10px] text-gray-400 font-sans font-bold">
-                        Registered At: {new Date(ref.date).toLocaleString()}
-                      </span>
+                  <div className="space-y-4 font-sans animate-fade-in">
+                    {/* Search / Filter Section */}
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="Search by Sponsor, Referral Code, or Referred name/email..."
+                        value={referralSearch}
+                        onChange={(e) => setReferralSearch(e.target.value)}
+                        className="w-full pl-8 pr-12 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-purple-600 focus:bg-white bg-slate-50 transition-colors"
+                      />
+                      <User className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-gray-400" />
+                      {referralSearch && (
+                        <button
+                          type="button"
+                          onClick={() => setReferralSearch('')}
+                          className="absolute right-3 top-2.5 text-xs text-purple-600 hover:underline font-bold cursor-pointer"
+                        >
+                          Clear
+                        </button>
+                      )}
                     </div>
 
-                    {/* Flow Relationship Visualizer - Who Referred Who */}
-                    <div className="grid grid-cols-1 md:grid-cols-11 gap-3 items-center border border-gray-155 p-3 rounded-xl bg-white shadow-3xs">
-                      
-                      {/* Referrer Column */}
-                      <div className="md:col-span-5 bg-purple-50/10 border border-purple-100/75 p-3 rounded-lg space-y-1">
-                        <span className="text-[9px] uppercase font-black tracking-widest text-purple-600 bg-purple-50 px-2 py-0.5 rounded border border-purple-150 inline-block mb-1">
-                          👤 SPONSOR / REFERRER
-                        </span>
-                        <h5 className="font-black text-gray-950 text-sm leading-tight">{referrerName}</h5>
-                        <p className="text-[10.5px] text-gray-500 font-semibold">{ref.referrerEmail}</p>
-                        <div className="pt-1 flex flex-wrap items-center gap-1.5 text-[10px] font-semibold text-gray-400">
-                           <span>Invite Code:</span>
-                           <code className="text-purple-600 font-mono bg-purple-50 border border-purple-150 px-1.5 py-0.2 rounded font-black">{ref.referrerCode}</code>
-                           <span>|</span>
-                           <span>Rank:</span>
-                           <span className="text-slate-800 font-black">{referrerRank}</span>
-                        </div>
+                    {filteredGroups.length === 0 ? (
+                      <div className="text-center py-8 text-gray-500 text-xs font-semibold">
+                        No sponsors match your referral search.
                       </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {filteredGroups.map((group) => {
+                          const isExpanded = !!expandedSponsors[group.email];
+                          return (
+                            <div key={group.email} className="border border-purple-100 rounded-2xl bg-white shadow-3xs overflow-hidden transition-all">
+                              {/* Sponsor Info Row / Header Accordion */}
+                              <div 
+                                onClick={() => setExpandedSponsors(prev => ({ ...prev, [group.email]: !isExpanded }))}
+                                className="p-4 bg-slate-50/50 hover:bg-slate-100/60 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-3 cursor-pointer select-none"
+                              >
+                                <div className="flex items-start gap-3">
+                                  <div className="p-2.5 bg-purple-50 rounded-xl text-purple-700 shrink-0 mt-0.5">
+                                    <Users className="w-5 h-5" />
+                                  </div>
+                                  <div className="space-y-0.5">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <h4 className="font-extrabold text-gray-950 text-sm leading-tight">{group.sponsorName}</h4>
+                                      <span className="text-[10px] text-gray-400 font-mono">({group.email})</span>
+                                    </div>
+                                    <div className="flex flex-wrap items-center gap-2 text-[10.5px] font-bold text-slate-500">
+                                      <span className="text-purple-700 bg-purple-50 px-1.5 py-0.2 rounded font-mono font-black text-[9.5px] border border-purple-150">
+                                        Code: {group.sponsorCode}
+                                      </span>
+                                      <span>•</span>
+                                      <span>Rank: <strong className="text-gray-850 font-black">{group.sponsorRank}</strong></span>
+                                      <span>•</span>
+                                      <span>Total Referred: <strong className="text-purple-705 font-extrabold font-mono">{group.refs.length}</strong></span>
+                                    </div>
+                                  </div>
+                                </div>
 
-                      {/* Direction Arrow Component */}
-                      <div className="md:col-span-1 flex flex-col items-center justify-center py-1 md:py-0 text-center">
-                        <div className="text-[9px] font-black text-purple-805 tracking-widest uppercase font-mono bg-purple-50 border border-purple-150 px-1.5 py-0.5 rounded-full mb-1">
-                          referred
-                        </div>
-                        <div className="hidden md:block text-purple-600">
-                          <ArrowRight className="w-5 h-5 stroke-[2.5]" />
-                        </div>
-                        <div className="md:hidden text-purple-600 rotate-90 my-0.5">
-                          <ArrowRight className="w-5 h-5 stroke-[2.5]" />
-                        </div>
-                      </div>
+                                <div className="flex items-center justify-between md:justify-end gap-3 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-dashed border-gray-150">
+                                  <div className="flex items-center gap-1.5 flex-wrap">
+                                    <span className={`text-[9px] font-black px-2 py-0.5 rounded border ${
+                                      group.pendingCount > 0 
+                                        ? 'bg-amber-50 text-amber-805 border-amber-200 animate-pulse' 
+                                        : 'bg-gray-100 text-gray-500 border-gray-200'
+                                    }`}>
+                                      {group.pendingCount} PENDING
+                                    </span>
+                                    <span className="text-[9px] font-black px-2 py-0.5 rounded border bg-purple-50 text-purple-700 border-purple-150">
+                                      {group.approvedCount} APPROVED
+                                    </span>
+                                  </div>
 
-                      {/* Referee Column */}
-                      <div className="md:col-span-5 bg-sky-50/10 border border-sky-100/75 p-3 rounded-lg space-y-1">
-                        <span className="text-[9px] uppercase font-black tracking-widest text-sky-850 bg-sky-50 px-2 py-0.5 rounded border border-sky-150 inline-block mb-1">
-                          ✨ REFERRED SIGN-UP
-                        </span>
-                        <h5 className="font-black text-gray-950 text-sm leading-tight">{ref.referredName}</h5>
-                        <p className="text-[10.5px] text-gray-500 font-semibold">{ref.referredEmail}</p>
-                        <div className="pt-1 flex flex-wrap items-center gap-1 text-[10px] font-semibold text-gray-400">
-                          <span className="text-sky-750 font-bold bg-sky-50 px-1.5 py-0.5 rounded border border-sky-100">
-                            Get ₦500.00 onboarding reward credited live
-                          </span>
-                        </div>
-                      </div>
+                                  <div className="flex items-center gap-1 text-purple-600 font-black text-xs">
+                                    <span>{isExpanded ? 'Collapse' : 'Manage List'}</span>
+                                    <ArrowRight className={`w-4 h-4 transition-transform duration-200 text-purple-600 ${isExpanded ? 'rotate-90' : ''}`} />
+                                  </div>
+                                </div>
+                              </div>
 
-                    </div>
+                              {/* Accordion List Body */}
+                              {isExpanded && (
+                                <div className="p-4 border-t border-purple-50 space-y-3 bg-white font-sans text-xs">
+                                  <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+                                    <span className="text-[10px] uppercase font-black text-gray-400 tracking-wider">
+                                      Direct Referrals Feed for {group.sponsorName}
+                                    </span>
+                                    {group.pendingCount > 0 && (
+                                      <div className="flex gap-2">
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (confirm(`Are you sure you want to approve all ${group.pendingCount} pending referrals for ${group.sponsorName}?`)) {
+                                              group.refs.filter(r => r.status === 'pending').forEach((ref) => {
+                                                onApproveReferral(ref.id);
+                                              });
+                                            }
+                                          }}
+                                          className="px-2.5 py-1 bg-purple-600 hover:bg-purple-700 text-white text-[10px] font-black uppercase rounded-lg cursor-pointer transition-colors"
+                                        >
+                                          Approve All Pending
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
 
-                    {/* Pending Action Buttons */}
-                    {ref.status === 'pending' && (
-                      <div className="flex items-center gap-2 self-end justify-end w-full pt-1.5">
-                        <button
-                          onClick={() => onDeclineReferral(ref.id)}
-                          className="px-4 py-2 bg-red-50 hover:bg-red-100 border border-red-150 text-red-700 hover:text-red-950 rounded-xl text-xs font-black uppercase tracking-wider cursor-pointer flex items-center justify-center gap-1.5 transition-all"
-                        >
-                          <XCircle className="w-4 h-4" /> Reject referral
-                        </button>
-                        <button
-                          onClick={() => onApproveReferral(ref.id)}
-                          className="px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-black uppercase tracking-wider cursor-pointer flex items-center justify-center gap-1.5 shadow-md shadow-purple-150 transition-all"
-                        >
-                          <CheckCircle className="w-4 h-4" /> Approve & Credit Sponsor
-                        </button>
+                                  <div className="space-y-2.5 max-h-[400px] overflow-y-auto pr-1">
+                                    {group.refs.map((ref) => {
+                                      const refereeUser = registeredUsers.find(
+                                        u => u.email.toLowerCase() === ref.referredEmail.toLowerCase()
+                                      );
+                                      const refereeHasDeposit = refereeUser && (refereeUser.walletBalance > 0 || (refereeUser.investedBalance || 0) > 0);
+
+                                      return (
+                                        <div key={ref.id} className="p-3 border border-gray-150 rounded-xl space-y-2.5 hover:border-purple-200 transition-colors">
+                                          <div className="flex justify-between items-start gap-2 flex-wrap">
+                                            <div className="space-y-0.5">
+                                              <div className="flex items-center gap-1.5 flex-wrap">
+                                                <p className="font-extrabold text-gray-900">{ref.referredName || 'Unknown User'}</p>
+                                                <span className="text-[10px] text-gray-400 font-mono">({ref.referredEmail})</span>
+                                              </div>
+                                              <p className="text-[10px] text-gray-400 font-mono">Ledger ID: {ref.id} | Joined: {new Date(ref.date).toLocaleDateString()}</p>
+                                            </div>
+
+                                            <div className="text-right space-y-1">
+                                              <span className="text-[11px] font-black text-purple-700 font-mono block">₦{formatNGN(ref.amount)} Reward</span>
+                                              <div className="flex items-center gap-1.5 justify-end">
+                                                {refereeHasDeposit ? (
+                                                  <span className="text-[8px] font-extrabold text-emerald-800 bg-emerald-100 border border-emerald-200 px-1.5 py-0.2 rounded-md">
+                                                    💰 Active Depositor
+                                                  </span>
+                                                ) : (
+                                                  <span className="text-[8px] font-bold text-gray-500 bg-gray-50 border border-gray-200 px-1.5 py-0.2 rounded-md">
+                                                    No Deposit Yet
+                                                  </span>
+                                                )}
+                                                <span className={`inline-block text-[8px] uppercase font-black px-1.5 py-0.2 rounded border ${
+                                                  ref.status === 'approved'
+                                                    ? 'bg-purple-50 text-purple-700 border-purple-150'
+                                                    : ref.status === 'rejected'
+                                                    ? 'bg-red-50 text-red-650 border-red-150'
+                                                    : 'bg-yellow-50 text-yellow-750 border-yellow-150 animate-pulse'
+                                                }`}>
+                                                  {ref.status}
+                                                </span>
+                                              </div>
+                                            </div>
+                                          </div>
+
+                                          {ref.status === 'pending' && (
+                                            <div className="flex items-center gap-1.5 justify-end pt-2 border-t border-dashed border-gray-100">
+                                              <button
+                                                type="button"
+                                                onClick={() => onDeclineReferral(ref.id)}
+                                                className="px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-[10px] font-black uppercase rounded-lg cursor-pointer transition-colors"
+                                              >
+                                                Reject
+                                              </button>
+                                              <button
+                                                type="button"
+                                                onClick={() => onApproveReferral(ref.id)}
+                                                className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white text-[10px] font-black uppercase rounded-lg cursor-pointer transition-colors flex items-center gap-1 shadow-sm"
+                                              >
+                                                <CheckCircle className="w-3 h-3" /> Approve Referral
+                                              </button>
+                                            </div>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
                 );
-              })}
+              })()}
+
+              {referralViewMode === 'feed' && (
+                <div className="space-y-6 divide-y divide-gray-150">
+                  <div className="relative font-sans pb-4">
+                    <input
+                      type="text"
+                      placeholder="Search referrals by sponsor or referred name/email..."
+                      value={referralSearch}
+                      onChange={(e) => setReferralSearch(e.target.value)}
+                      className="w-full pl-8 pr-12 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-purple-600 focus:bg-white bg-slate-50 transition-colors"
+                    />
+                    <User className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-gray-400" />
+                    {referralSearch && (
+                      <button
+                        type="button"
+                        onClick={() => setReferralSearch('')}
+                        className="absolute right-3 top-2.5 text-xs text-purple-600 hover:underline font-bold cursor-pointer"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+
+                  {referralsList.filter((ref) => {
+                    const q = referralSearch.toLowerCase().trim();
+                    if (!q) return true;
+                    if (ref.referrerEmail.toLowerCase().includes(q) || ref.referredEmail.toLowerCase().includes(q)) return true;
+                    if (ref.referredName && ref.referredName.toLowerCase().includes(q)) return true;
+                    const referrerUser = registeredUsers.find(
+                      u => u.email.toLowerCase() === ref.referrerEmail.toLowerCase()
+                    );
+                    if (referrerUser && referrerUser.fullName.toLowerCase().includes(q)) return true;
+                    return false;
+                  }).length === 0 && (
+                    <div className="text-center py-8 px-6 text-gray-550 text-xs font-semibold">
+                      No referrals match your search query.
+                    </div>
+                  )}
+
+                  {referralsList.filter((ref) => {
+                    const q = referralSearch.toLowerCase().trim();
+                    if (!q) return true;
+                    if (ref.referrerEmail.toLowerCase().includes(q) || ref.referredEmail.toLowerCase().includes(q)) return true;
+                    if (ref.referredName && ref.referredName.toLowerCase().includes(q)) return true;
+                    const referrerUser = registeredUsers.find(
+                      u => u.email.toLowerCase() === ref.referrerEmail.toLowerCase()
+                    );
+                    if (referrerUser && referrerUser.fullName.toLowerCase().includes(q)) return true;
+                    return false;
+                  }).map((ref, idx) => {
+                    const referrerUser = registeredUsers.find(
+                      u => u.email.toLowerCase() === ref.referrerEmail.toLowerCase()
+                    );
+                    const referrerName = referrerUser ? referrerUser.fullName : 'Sponsor User';
+                    const referrerRank = referrerUser ? (referrerUser.approvedLevel || 'Standard Member') : 'Standard Member';
+
+                    return (
+                      <div key={ref.id} className={`space-y-3 font-sans text-xs ${idx > 0 ? 'pt-6' : ''}`}>
+                        {/* Status & Reward Badge Bar */}
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 bg-gray-50/50 p-2.5 rounded-xl border border-gray-100">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="text-[10px] font-black px-2.5 py-1 bg-purple-50 border border-purple-150 text-purple-800 rounded-md tracking-wide">
+                              REWARD: ₦{formatNGN(ref.amount)}
+                            </span>
+                            <span className={`text-[9.5px] uppercase font-black px-2.5 py-1 rounded-md tracking-wider border ${
+                              ref.status === 'approved' 
+                                ? 'bg-purple-50 text-purple-700 border-purple-150' 
+                                : ref.status === 'rejected'
+                                ? 'bg-red-50 text-red-650 border-red-150'
+                                : 'bg-yellow-50 text-yellow-750 border-yellow-150 animate-pulse'
+                            }`}>
+                              STATUS: {ref.status.toUpperCase()}
+                            </span>
+                            <span className="text-[10px] text-gray-400 font-mono">Ledger ID: {ref.id}</span>
+                          </div>
+                          <span className="text-[10px] text-gray-400 font-sans font-bold">
+                            Registered At: {new Date(ref.date).toLocaleString()}
+                          </span>
+                        </div>
+
+                        {/* Flow Relationship Visualizer - Who Referred Who */}
+                        <div className="grid grid-cols-1 md:grid-cols-11 gap-3 items-center border border-gray-155 p-3 rounded-xl bg-white shadow-3xs">
+                          
+                          {/* Referrer Column */}
+                          <div className="md:col-span-5 bg-purple-50/10 border border-purple-100/75 p-3 rounded-lg space-y-1">
+                            <span className="text-[9px] uppercase font-black tracking-widest text-purple-600 bg-purple-50 px-2 py-0.5 rounded border border-purple-150 inline-block mb-1">
+                              👤 SPONSOR / REFERRER
+                            </span>
+                            <h5 className="font-black text-gray-950 text-sm leading-tight">{referrerName}</h5>
+                            <p className="text-[10.5px] text-gray-500 font-semibold">{ref.referrerEmail}</p>
+                            <div className="pt-1 flex flex-wrap items-center gap-1.5 text-[10px] font-semibold text-gray-400">
+                               <span>Invite Code:</span>
+                               <code className="text-purple-600 font-mono bg-purple-50 border border-purple-150 px-1.5 py-0.2 rounded font-black">{ref.referrerCode}</code>
+                               <span>|</span>
+                               <span>Rank:</span>
+                               <span className="text-slate-800 font-black">{referrerRank}</span>
+                            </div>
+                          </div>
+
+                          {/* Direction Arrow Component */}
+                          <div className="md:col-span-1 flex flex-col items-center justify-center py-1 md:py-0 text-center">
+                            <div className="text-[9px] font-black text-purple-800 tracking-widest uppercase font-mono bg-purple-50 border border-purple-150 px-1.5 py-0.5 rounded-full mb-1">
+                              referred
+                            </div>
+                            <div className="hidden md:block text-purple-600">
+                              <ArrowRight className="w-5 h-5 stroke-[2.5]" />
+                            </div>
+                            <div className="md:hidden text-purple-600 rotate-90 my-0.5">
+                              <ArrowRight className="w-5 h-5 stroke-[2.5]" />
+                            </div>
+                          </div>
+
+                          {/* Referee Column */}
+                          <div className="md:col-span-5 bg-sky-50/10 border border-sky-100/75 p-3 rounded-lg space-y-1">
+                            <span className="text-[9px] uppercase font-black tracking-widest text-sky-800 bg-sky-50 px-2 py-0.5 rounded border border-sky-150 inline-block mb-1">
+                              ✨ REFERRED SIGN-UP
+                            </span>
+                            <h5 className="font-black text-gray-950 text-sm leading-tight">{ref.referredName}</h5>
+                            <p className="text-[10.5px] text-gray-500 font-semibold">{ref.referredEmail}</p>
+                            <div className="pt-1 flex flex-wrap items-center gap-1 text-[10px] font-semibold text-gray-400">
+                              <span className="text-sky-750 font-bold bg-sky-50 px-1.5 py-0.5 rounded border border-sky-100">
+                                Get ₦500.00 onboarding reward credited live
+                              </span>
+                            </div>
+                          </div>
+
+                        </div>
+
+                        {/* Pending Action Buttons */}
+                        {ref.status === 'pending' && (
+                          <div className="flex items-center gap-2 self-end justify-end w-full pt-1.5">
+                            <button
+                              onClick={() => onDeclineReferral(ref.id)}
+                              className="px-4 py-2 bg-red-50 hover:bg-red-100 border border-red-150 text-red-700 hover:text-red-950 rounded-xl text-xs font-black uppercase tracking-wider cursor-pointer flex items-center justify-center gap-1.5 transition-all"
+                            >
+                              <XCircle className="w-4 h-4" /> Reject referral
+                            </button>
+                            <button
+                              onClick={() => onApproveReferral(ref.id)}
+                              className="px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-black uppercase tracking-wider cursor-pointer flex items-center justify-center gap-1.5 shadow-md shadow-purple-150 transition-all"
+                            >
+                              <CheckCircle className="w-4 h-4" /> Approve & Credit Sponsor
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
         </div>
       )}
 
       {/* Deposits Tab Queue */}
-      {adminTab === 'deposits' && (
-        <div className="bg-white border border-gray-150 rounded-2xl p-5 md:p-6 shadow-sm space-y-6 animate-fade-in">
-          <div>
-            <h3 className="text-lg font-bold text-gray-950">Deposit Approvals Pipeline</h3>
-            <p className="text-xs text-gray-400 font-medium">Verify bank receipts or Paystack triggers, then release Naira capital balance credits to shareholder ledgers.</p>
-          </div>
+      {adminTab === 'deposits' && (() => {
+        const filteredDeposits = pendingDeposits.filter((tx) => {
+          const q = depositSearch.toLowerCase().trim();
+          if (!q) return true;
+          if (tx.userEmail && tx.userEmail.toLowerCase().includes(q)) return true;
+          const usr = registeredUsers.find(u => u.email.toLowerCase() === (tx.userEmail || '').toLowerCase());
+          if (usr && usr.fullName.toLowerCase().includes(q)) return true;
+          if (tx.description && tx.description.toLowerCase().includes(q)) return true;
+          if (tx.reference && tx.reference.toLowerCase().includes(q)) return true;
+          return false;
+        });
 
-          {pendingDeposits.length === 0 ? (
-            <div className="text-center py-12 px-6 max-w-sm mx-auto space-y-2">
-              <CheckCircle className="w-10 h-10 text-purple-600 block mx-auto animate-bounce" />
-              <h4 className="font-bold text-gray-900 text-sm">Deposit queue empty</h4>
-              <p className="text-xs text-gray-400 leading-relaxed">No deposit verifications are currently outstanding. Shareholders get credited automatically if manual policy override settings are toggled 'Off'.</p>
+        return (
+          <div className="bg-white border border-gray-150 rounded-2xl p-5 md:p-6 shadow-sm space-y-6 animate-fade-in">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-bold text-gray-950">Deposit Approvals Pipeline</h3>
+                <p className="text-xs text-gray-400 font-medium">Verify bank receipts or Paystack triggers, then release Naira capital balance credits to shareholder ledgers.</p>
+              </div>
+              {depositSearch && (
+                <button
+                  type="button"
+                  onClick={() => setDepositSearch('')}
+                  className="text-xs text-purple-600 hover:underline font-bold self-start sm:self-center cursor-pointer"
+                >
+                  Clear Search
+                </button>
+              )}
             </div>
-          ) : (
-            <div className="space-y-4 font-sans justify-normal">
-              {pendingDeposits.map((tx) => (
-                <div key={tx.id} className="p-4 bg-slate-50 border border-slate-150 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition-all hover:bg-slate-50/80">
-                  <div className="space-y-1.5 flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="px-2 py-0.5 bg-amber-100 border border-amber-150 text-amber-800 uppercase font-black text-[9px] tracking-wider rounded">Pending Review</span>
-                      <span className="text-[10px] font-mono text-gray-400 font-black">{tx.reference}•{new Date(tx.date).toLocaleTimeString()}</span>
-                    </div>
-                    <div className="flex items-baseline gap-1.5">
-                      <span className="text-xl font-black font-mono text-gray-950">{formatNGN(tx.amount)}</span>
-                      <span className="text-xs text-purple-600 font-black uppercase tracking-wider">Fund Upgrade Direct Credit</span>
-                    </div>
-                    <p className="text-xs text-gray-550 leading-relaxed font-semibold">{tx.description}</p>
-                  </div>
 
-                  {/* Actions buttons */}
-                  <div className="flex items-center gap-2.5 w-full md:w-auto self-end md:self-center shrink-0">
-                    <button
-                      onClick={() => onDeclineDeposit(tx.id)}
-                      className="flex-1 md:flex-initial px-4 py-2 bg-red-50 hover:bg-red-100 border border-red-150 text-red-700 hover:text-red-950 rounded-xl text-xs font-black uppercase tracking-wider cursor-pointer flex items-center justify-center gap-1.5"
-                    >
-                      <XCircle className="w-4 h-4" /> Reject & Fail
-                    </button>
-                    <button
-                      onClick={() => onApproveDeposit(tx.id)}
-                      className="flex-1 md:flex-initial px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-black uppercase tracking-wider cursor-pointer flex items-center justify-center gap-1.5 shadow-md shadow-purple-150"
-                    >
-                      <CheckCircle className="w-4 h-4" /> Approve Deposit
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+            {pendingDeposits.length > 0 && (
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search by shareholder name, email or reference..."
+                  value={depositSearch}
+                  onChange={(e) => setDepositSearch(e.target.value)}
+                  className="w-full pl-8 pr-4 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-purple-600 focus:bg-white bg-slate-50 transition-colors"
+                />
+                <User className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-gray-400" />
+              </div>
+            )}
 
-      {/* Investments Tab Queue */}
-      {adminTab === 'investments' && (
-        <div className="bg-white border border-gray-150 rounded-2xl p-5 md:p-6 shadow-sm space-y-6 animate-fade-in">
-          <div>
-            <h3 className="text-lg font-bold text-gray-950">Corporative Option Allocations</h3>
-            <p className="text-xs text-gray-400 font-medium">Underwrite package investment applications. Approved allocations will start accumulating the 15% daily dividends instantly.</p>
-          </div>
-
-          {pendingInvestments.length === 0 ? (
-            <div className="text-center py-12 px-6 max-w-sm mx-auto space-y-2">
-              <CheckCircle className="w-10 h-10 text-purple-600 block mx-auto animate-bounce" />
-              <h4 className="font-bold text-gray-900 text-sm">Package queue empty</h4>
-              <p className="text-xs text-gray-400 leading-relaxed">All ongoing shareholder purchases have been allocated. New package activations are ready to proceed with standard dividends.</p>
-            </div>
-          ) : (
-            <div className="space-y-4 font-sans justify-normal">
-              {pendingInvestments.map((inv) => (
-                <div key={inv.id} className="p-4 bg-slate-50 border border-slate-150 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition-all hover:bg-slate-50/80">
-                  <div className="space-y-1.5 flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="px-2 py-0.5 bg-amber-100 border border-amber-150 text-amber-800 uppercase font-black text-[9px] tracking-wider rounded">Awaiting Placement</span>
-                      <span className="text-[10px] font-mono text-gray-400 font-bold">INV-ID: {inv.id}</span>
-                    </div>
-                    <div className="flex items-baseline gap-1.5">
-                      <span className="text-xl font-black font-mono text-gray-950">{formatNGN(inv.amountInvested)}</span>
-                      <span className="text-xs text-purple-805 font-extrabold uppercase tracking-widest">{inv.productName} Option Lock</span>
-                    </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-[10px] text-gray-400 font-bold uppercase tracking-wider pt-1 border-t border-slate-105">
-                      <div>
-                        Daily Profit Potential: <strong className="text-purple-600 block font-mono">+{formatNGN(inv.amountInvested * (inv.rate || 0.10))}/day</strong>
-                      </div>
-                      <div>
-                        Maturity: <strong className="text-gray-700 block font-mono">{inv.termDays || 4} Days</strong>
-                      </div>
-                      <div>
-                        Expected Return: <strong className="text-gray-700 block">{formatNGN(inv.expectedReturn)}</strong>
-                      </div>
-                      <div>
-                        Auto Compounds <strong className="text-gray-700 block">{inv.isCompounding ? 'YES' : 'NO'}</strong>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Actions buttons */}
-                  <div className="flex items-center gap-2.5 w-full md:w-auto self-end md:self-center shrink-0">
-                    <button
-                      onClick={() => onDeclineInvestment(inv.id)}
-                      className="flex-1 md:flex-initial px-4 py-2 bg-red-50 hover:bg-red-100 border border-red-150 text-red-700 hover:text-red-950 rounded-xl text-xs font-black uppercase tracking-wider cursor-pointer flex items-center justify-center gap-1.5"
-                    >
-                      <XCircle className="w-4 h-4" /> Decline & Refund
-                    </button>
-                    <button
-                      onClick={() => onApproveInvestment(inv.id)}
-                      className="flex-1 md:flex-initial px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-black uppercase tracking-wider cursor-pointer flex items-center justify-center gap-1.5 shadow-md shadow-purple-150"
-                    >
-                      <CheckCircle className="w-4 h-4" /> Approve Option Active
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Withdrawals Tab Queue */}
-      {adminTab === 'withdrawals' && (
-        <div className="bg-white border border-gray-150 rounded-2xl p-5 md:p-6 shadow-sm space-y-6 animate-fade-in">
-          <div>
-            <h3 className="text-lg font-bold text-gray-950">Withdrawal Payout Approvals</h3>
-            <p className="text-xs text-gray-400 font-medium font-sans">Payout triggers captured on client-side bank transfers. Ensure the simulated platform time meets daily windows, then authorize direct payout releases.</p>
-          </div>
-
-          {pendingWithdrawals.length === 0 ? (
-            <div className="text-center py-12 px-6 max-w-sm mx-auto space-y-2">
-              <CheckCircle className="w-10 h-10 text-purple-600 block mx-auto animate-bounce" />
-              <h4 className="font-bold text-gray-900 text-sm">Payout queue empty</h4>
-              <p className="text-xs text-gray-400 leading-relaxed">No withdrawal requests are currently outstanding. Shareholders receive funds immediately inside their specified virtual NUBAN router upon approval.</p>
-            </div>
-          ) : (
-            <div className="space-y-4 font-sans justify-normal">
-              {pendingWithdrawals.map((tx) => {
-                const applicant = registeredUsers.find(u => u.email.toLowerCase() === (tx.userEmail || '').toLowerCase());
-                const applicantName = applicant ? applicant.fullName : 'Premium Shareholder';
-                const applicantAccount = applicant ? (applicant.accountNumber || 'Pending settlement setup') : 'Pending settlement setup';
-
-                // Parse account details
-                let paymentType = 'Unknown Method';
-                let parsedAccountNum = applicantAccount;
-                let parsedBankBrand = 'Configured Route';
-
-                if (applicantAccount.startsWith('NG-ACC-')) {
-                  const stripped = applicantAccount.replace('NG-ACC-', '');
-                  const parts = stripped.split('|');
-                  paymentType = 'Commercial Bank Transfer (NUBAN)';
-                  parsedAccountNum = parts[0] || 'N/A';
-                  parsedBankBrand = parts[1] || 'Commercial Bank';
-                } else if (applicantAccount.startsWith('OPAY-')) {
-                  paymentType = 'OPay Microfinance e-Wallet';
-                  parsedAccountNum = applicantAccount.replace('OPAY-', '');
-                  parsedBankBrand = 'OPay (Mobile Money)';
-                } else if (applicantAccount.startsWith('T') && applicantAccount.length >= 26) {
-                  paymentType = 'USDT Ledger Address (TRC-20)';
-                  parsedAccountNum = applicantAccount;
-                  parsedBankBrand = 'TRON Network (USDT)';
-                } else if (applicantAccount.includes('|')) {
-                  const parts = applicantAccount.split('|');
-                  parsedAccountNum = parts[0] || 'N/A';
-                  parsedBankBrand = parts[1] || 'Custom Route';
-                }
-
-                return (
-                  <div key={tx.id} className="p-5 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col md:flex-row justify-between items-start gap-5 transition-all hover:bg-slate-50/80">
-                    <div className="space-y-3.5 flex-1 w-full">
-                      <div className="flex items-center justify-between flex-wrap gap-2">
+            {pendingDeposits.length === 0 ? (
+              <div className="text-center py-12 px-6 max-w-sm mx-auto space-y-2">
+                <CheckCircle className="w-10 h-10 text-purple-600 block mx-auto animate-bounce" />
+                <h4 className="font-bold text-gray-900 text-sm">Deposit queue empty</h4>
+                <p className="text-xs text-gray-400 leading-relaxed">No deposit verifications are currently outstanding. Shareholders get credited automatically if manual policy override settings are toggled 'Off'.</p>
+              </div>
+            ) : filteredDeposits.length === 0 ? (
+              <div className="text-center py-12 px-6 max-w-sm mx-auto space-y-2">
+                <p className="text-sm text-gray-500 font-semibold">No pending deposits match your search query.</p>
+                <p className="text-xs text-gray-400">Try adjusting your filters or spelling.</p>
+              </div>
+            ) : (
+              <div className="space-y-4 font-sans justify-normal">
+                {filteredDeposits.map((tx) => {
+                  const depositor = registeredUsers.find(u => u.email.toLowerCase() === (tx.userEmail || '').toLowerCase());
+                  return (
+                    <div key={tx.id} className="p-4 bg-slate-50 border border-slate-150 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition-all hover:bg-slate-50/80">
+                      <div className="space-y-1.5 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="px-2.5 py-0.5 bg-red-100 border border-red-150 text-red-800 uppercase font-black text-[9px] tracking-wider rounded">Awaiting Approval</span>
-                          <span className="text-[10px] font-mono text-gray-400 font-bold">REF: {tx.reference}</span>
-                          {tx.userEmail && (
-                            <span className="text-[10px] font-mono text-purple-600 font-black bg-purple-50 border border-purple-100 px-1.5 py-0.2 rounded">
-                              {tx.userEmail}
+                          <span className="px-2 py-0.5 bg-amber-100 border border-amber-150 text-amber-800 uppercase font-black text-[9px] tracking-wider rounded">Pending Review</span>
+                          <span className="text-[10px] font-mono text-gray-400 font-black">{tx.reference}•{new Date(tx.date).toLocaleTimeString()}</span>
+                          {depositor && (
+                            <span className="px-2 py-0.5 bg-purple-50 border border-purple-100 text-purple-700 font-bold text-[9px] rounded uppercase">
+                              👨‍💼 {depositor.fullName} ({tx.userEmail})
                             </span>
                           )}
                         </div>
-                        <span className="text-[10.5px] text-gray-450 font-bold">
-                          Requested: {new Date(tx.date).toLocaleString()}
-                        </span>
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="text-xl font-black font-mono text-gray-950">{formatNGN(tx.amount)}</span>
+                          <span className="text-xs text-purple-600 font-black uppercase tracking-wider">Fund Upgrade Direct Credit</span>
+                        </div>
+                        <p className="text-xs text-gray-550 leading-relaxed font-semibold">{tx.description}</p>
                       </div>
 
-                      <div className="flex items-baseline gap-1.5 border-b border-gray-200 pb-2">
-                        <span className="text-2xl font-black font-mono text-gray-950">{formatNGN(tx.amount)}</span>
-                        <span className="text-[11px] text-red-705 font-black uppercase tracking-wider">Payout Claim Outflow</span>
+                      {/* Actions buttons */}
+                      <div className="flex items-center gap-2.5 w-full md:w-auto self-end md:self-center shrink-0">
+                        <button
+                          onClick={() => onDeclineDeposit(tx.id)}
+                          className="flex-1 md:flex-initial px-4 py-2 bg-red-50 hover:bg-red-100 border border-red-150 text-red-700 hover:text-red-955 rounded-xl text-xs font-black uppercase tracking-wider cursor-pointer flex items-center justify-center gap-1.5"
+                        >
+                          <XCircle className="w-4 h-4" /> Reject & Fail
+                        </button>
+                        <button
+                          onClick={() => onApproveDeposit(tx.id)}
+                          className="flex-1 md:flex-initial px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-black uppercase tracking-wider cursor-pointer flex items-center justify-center gap-1.5 shadow-md shadow-purple-150"
+                        >
+                          <CheckCircle className="w-4 h-4" /> Approve Deposit
+                        </button>
+                      </div>
+                    </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+
+          {/* Investments Tab Queue */}
+          {adminTab === 'investments' && (() => {
+        const filteredInvestments = pendingInvestments.filter((inv) => {
+          const q = investmentSearch.toLowerCase().trim();
+          if (!q) return true;
+          if (inv.userEmail && inv.userEmail.toLowerCase().includes(q)) return true;
+          const usr = registeredUsers.find(u => u.email.toLowerCase() === (inv.userEmail || '').toLowerCase());
+          if (usr && usr.fullName.toLowerCase().includes(q)) return true;
+          if (inv.productName && inv.productName.toLowerCase().includes(q)) return true;
+          return false;
+        });
+
+        return (
+          <div className="bg-white border border-gray-150 rounded-2xl p-5 md:p-6 shadow-sm space-y-6 animate-fade-in">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-bold text-gray-950">Corporative Option Allocations</h3>
+                <p className="text-xs text-gray-400 font-medium">Underwrite package investment applications. Approved allocations will start accumulating the 15% daily dividends instantly.</p>
+              </div>
+              {investmentSearch && (
+                <button
+                  type="button"
+                  onClick={() => setInvestmentSearch('')}
+                  className="text-xs text-purple-600 hover:underline font-bold self-start sm:self-center cursor-pointer"
+                >
+                  Clear Search
+                </button>
+              )}
+            </div>
+
+            {pendingInvestments.length > 0 && (
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search by shareholder name or email..."
+                  value={investmentSearch}
+                  onChange={(e) => setInvestmentSearch(e.target.value)}
+                  className="w-full pl-8 pr-4 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-purple-600 focus:bg-white bg-slate-50 transition-colors"
+                />
+                <User className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-gray-400" />
+              </div>
+            )}
+
+            {pendingInvestments.length === 0 ? (
+              <div className="text-center py-12 px-6 max-w-sm mx-auto space-y-2">
+                <CheckCircle className="w-10 h-10 text-purple-600 block mx-auto animate-bounce" />
+                <h4 className="font-bold text-gray-900 text-sm">Package queue empty</h4>
+                <p className="text-xs text-gray-400 leading-relaxed">All ongoing shareholder purchases have been allocated. New package activations are ready to proceed with standard dividends.</p>
+              </div>
+            ) : filteredInvestments.length === 0 ? (
+              <div className="text-center py-12 px-6 max-w-sm mx-auto space-y-2">
+                <p className="text-sm text-gray-500 font-semibold">No pending packages match your search query.</p>
+                <p className="text-xs text-gray-400">Try adjusting your filters or spelling.</p>
+              </div>
+            ) : (
+              <div className="space-y-4 font-sans justify-normal">
+                {filteredInvestments.map((inv) => {
+                  const applicant = registeredUsers.find(u => u.email.toLowerCase() === (inv.userEmail || '').toLowerCase());
+                  return (
+                    <div key={inv.id} className="p-4 bg-slate-50 border border-slate-150 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition-all hover:bg-slate-50/80">
+                      <div className="space-y-1.5 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="px-2 py-0.5 bg-amber-100 border border-amber-150 text-amber-800 uppercase font-black text-[9px] tracking-wider rounded">Awaiting Placement</span>
+                          <span className="text-[10px] font-mono text-gray-400 font-bold">INV-ID: {inv.id}</span>
+                          {applicant && (
+                            <span className="px-2 py-0.5 bg-purple-50 border border-purple-100 text-purple-700 font-bold text-[9px] rounded uppercase">
+                              👨‍💼 {applicant.fullName} ({inv.userEmail})
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="text-xl font-black font-mono text-gray-950">{formatNGN(inv.amountInvested)}</span>
+                          <span className="text-xs text-purple-805 font-extrabold uppercase tracking-widest">{inv.productName} Option Lock</span>
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-[10px] text-gray-400 font-bold uppercase tracking-wider pt-1 border-t border-slate-105">
+                          <div>
+                            Daily Profit Potential: <strong className="text-purple-600 block font-mono">+{formatNGN(inv.amountInvested * (inv.rate || 0.10))}/day</strong>
+                          </div>
+                          <div>
+                            Maturity: <strong className="text-gray-700 block font-mono">{inv.termDays || 4} Days</strong>
+                          </div>
+                          <div>
+                            Expected Return: <strong className="text-gray-700 block">{formatNGN(inv.expectedReturn)}</strong>
+                          </div>
+                          <div>
+                            Auto Compounds <strong className="text-gray-700 block">{inv.isCompounding ? 'YES' : 'NO'}</strong>
+                          </div>
+                        </div>
                       </div>
 
-                      <p className="text-xs text-gray-550 leading-relaxed font-semibold bg-white p-2.5 rounded-xl border border-gray-150">
-                        <strong className="text-gray-400 text-[10px] uppercase font-black block mb-0.5">Withdrawal Narrative:</strong>
-                        {tx.description}
-                      </p>
+                      {/* Actions buttons */}
+                      <div className="flex items-center gap-2.5 w-full md:w-auto self-end md:self-center shrink-0">
+                        <button
+                          onClick={() => onDeclineInvestment(inv.id)}
+                          className="flex-1 md:flex-initial px-4 py-2 bg-red-50 hover:bg-red-100 border border-red-150 text-red-700 hover:text-red-955 rounded-xl text-xs font-black uppercase tracking-wider cursor-pointer flex items-center justify-center gap-1.5"
+                        >
+                          <XCircle className="w-4 h-4" /> Decline & Refund
+                        </button>
+                        <button
+                          onClick={() => onApproveInvestment(inv.id)}
+                          className="flex-1 md:flex-initial px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-black uppercase tracking-wider cursor-pointer flex items-center justify-center gap-1.5 shadow-md shadow-purple-150"
+                        >
+                          <CheckCircle className="w-4 h-4" /> Approve Option Active
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
-                      {/* Payee Disbursement Slip */}
-                      <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-3xs space-y-3.5">
-                        <div className="flex items-center justify-between border-b border-gray-100 pb-2.5">
-                          <span className="text-[9.5px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1">🏦 Direct Payee Disbursement Coordinates</span>
-                          <span className="text-[9.5px] font-black text-purple-600 bg-purple-50 border border-purple-150 px-2.5 py-0.5 rounded uppercase font-mono tracking-wider">
-                            {paymentType}
+      {/* Withdrawals Tab Queue */}
+      {adminTab === 'withdrawals' && (() => {
+        const filteredWithdrawals = pendingWithdrawals.filter((tx) => {
+          const q = withdrawalSearch.toLowerCase().trim();
+          if (!q) return true;
+          if (tx.userEmail && tx.userEmail.toLowerCase().includes(q)) return true;
+          const usr = registeredUsers.find(u => u.email.toLowerCase() === (tx.userEmail || '').toLowerCase());
+          if (usr && usr.fullName.toLowerCase().includes(q)) return true;
+          if (tx.description && tx.description.toLowerCase().includes(q)) return true;
+          if (tx.reference && tx.reference.toLowerCase().includes(q)) return true;
+          return false;
+        });
+
+        return (
+          <div className="bg-white border border-gray-150 rounded-2xl p-5 md:p-6 shadow-sm space-y-6 animate-fade-in font-sans">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-bold text-gray-950">Withdrawal Payout Approvals</h3>
+                <p className="text-xs text-gray-400 font-medium font-sans">Payout triggers captured on client-side bank transfers. Ensure the simulated platform time meets daily windows, then authorize direct payout releases.</p>
+              </div>
+              {withdrawalSearch && (
+                <button
+                  type="button"
+                  onClick={() => setWithdrawalSearch('')}
+                  className="text-xs text-purple-600 hover:underline font-bold self-start sm:self-center cursor-pointer"
+                >
+                  Clear Search
+                </button>
+              )}
+            </div>
+
+            {pendingWithdrawals.length > 0 && (
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search by shareholder name, email or reference..."
+                  value={withdrawalSearch}
+                  onChange={(e) => setWithdrawalSearch(e.target.value)}
+                  className="w-full pl-8 pr-4 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-purple-600 focus:bg-white bg-slate-50 transition-colors"
+                />
+                <User className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-gray-400" />
+              </div>
+            )}
+
+            {pendingWithdrawals.length === 0 ? (
+              <div className="text-center py-12 px-6 max-w-sm mx-auto space-y-2">
+                <CheckCircle className="w-10 h-10 text-purple-600 block mx-auto animate-bounce" />
+                <h4 className="font-bold text-gray-900 text-sm">Payout queue empty</h4>
+                <p className="text-xs text-gray-400 leading-relaxed">No withdrawal requests are currently outstanding. Shareholders receive funds immediately inside their specified virtual NUBAN router upon approval.</p>
+              </div>
+            ) : filteredWithdrawals.length === 0 ? (
+              <div className="text-center py-12 px-6 max-w-sm mx-auto space-y-2">
+                <p className="text-sm text-gray-500 font-semibold">No pending withdrawals match your search query.</p>
+                <p className="text-xs text-gray-400">Try adjusting your filters or spelling.</p>
+              </div>
+            ) : (
+              <div className="space-y-4 font-sans justify-normal">
+                {filteredWithdrawals.map((tx) => {
+                  const applicant = registeredUsers.find(u => u.email.toLowerCase() === (tx.userEmail || '').toLowerCase());
+                  const applicantName = applicant ? applicant.fullName : 'Premium Shareholder';
+                  const applicantAccount = applicant ? (applicant.accountNumber || 'Pending settlement setup') : 'Pending settlement setup';
+
+                  // Parse account details
+                  let paymentType = 'Unknown Method';
+                  let parsedAccountNum = applicantAccount;
+                  let parsedBankBrand = 'Configured Route';
+
+                  if (applicantAccount.startsWith('NG-ACC-')) {
+                    const stripped = applicantAccount.replace('NG-ACC-', '');
+                    const parts = stripped.split('|');
+                    paymentType = 'Commercial Bank Transfer (NUBAN)';
+                    parsedAccountNum = parts[0] || 'N/A';
+                    parsedBankBrand = parts[1] || 'Commercial Bank';
+                  } else if (applicantAccount.startsWith('OPAY-')) {
+                    paymentType = 'OPay Microfinance e-Wallet';
+                    parsedAccountNum = applicantAccount.replace('OPAY-', '');
+                    parsedBankBrand = 'OPay (Mobile Money)';
+                  } else if (applicantAccount.startsWith('T') && applicantAccount.length >= 26) {
+                    paymentType = 'USDT Ledger Address (TRC-20)';
+                    parsedAccountNum = applicantAccount;
+                    parsedBankBrand = 'TRON Network (USDT)';
+                  } else if (applicantAccount.includes('|')) {
+                    const parts = applicantAccount.split('|');
+                    parsedAccountNum = parts[0] || 'N/A';
+                    parsedBankBrand = parts[1] || 'Custom Route';
+                  }
+
+                  return (
+                    <div key={tx.id} className="p-5 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col md:flex-row justify-between items-start gap-5 transition-all hover:bg-slate-50/80">
+                      <div className="space-y-3.5 flex-1 w-full">
+                        <div className="flex items-center justify-between flex-wrap gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="px-2.5 py-0.5 bg-red-100 border border-red-150 text-red-800 uppercase font-black text-[9px] tracking-wider rounded">Awaiting Approval</span>
+                            <span className="text-[10px] font-mono text-gray-400 font-bold">REF: {tx.reference}</span>
+                            {tx.userEmail && (
+                              <span className="text-[10px] font-mono text-purple-600 font-black bg-purple-50 border border-purple-100 px-1.5 py-0.2 rounded">
+                                {applicantName} ({tx.userEmail})
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-[10.5px] text-gray-450 font-bold">
+                            Requested: {new Date(tx.date).toLocaleString()}
                           </span>
                         </div>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                          {/* Beneficiary Name */}
-                          <div className="bg-slate-50/50 border border-slate-100 rounded-xl p-2.5 relative flex flex-col justify-between">
-                            <div className="pr-12">
-                              <span className="text-[8.5px] text-gray-400 uppercase font-black tracking-wider block mb-0.5">Beneficiary Name</span>
-                              <p className="text-xs font-extrabold text-gray-900 select-all">{applicantName}</p>
-                            </div>
-                            <button
-                              onClick={() => {
-                                navigator.clipboard.writeText(applicantName);
-                                setCopiedId(`${tx.id}-name`);
-                                setTimeout(() => setCopiedId(null), 1500);
-                              }}
-                              className="absolute top-2.5 right-2 p-1 bg-white border border-gray-200 hover:bg-gray-50 text-gray-500 hover:text-gray-800 rounded-md transition-all cursor-pointer flex items-center gap-1 text-[8px] font-black uppercase tracking-wider"
-                            >
-                              {copiedId === `${tx.id}-name` ? (
-                                <><Check className="w-3 h-3 text-purple-600" /> <span className="text-purple-600 font-extrabold">Copied</span></>
-                              ) : (
-                                <><Copy className="w-3 h-3 text-gray-400" /> <span>Copy</span></>
-                              )}
-                            </button>
-                          </div>
 
-                          {/* Account number / USDT */}
-                          <div className="bg-slate-50/50 border border-slate-100 rounded-xl p-2.5 relative flex flex-col justify-between">
-                            <div className="pr-12">
-                              <span className="text-[8.5px] text-gray-400 uppercase font-black tracking-wider block mb-0.5">Account NUBAN / Coordinates</span>
-                              <p className="text-xs font-black text-purple-600 font-mono tracking-wide select-all break-all">{parsedAccountNum}</p>
-                            </div>
-                            <button
-                              onClick={() => {
-                                navigator.clipboard.writeText(parsedAccountNum);
-                                setCopiedId(`${tx.id}-acc`);
-                                setTimeout(() => setCopiedId(null), 1500);
-                              }}
-                              className="absolute top-2.5 right-2 p-1 bg-white border border-gray-200 hover:bg-gray-50 text-gray-500 hover:text-gray-800 rounded-md transition-all cursor-pointer flex items-center gap-1 text-[8px] font-black uppercase tracking-wider"
-                            >
-                              {copiedId === `${tx.id}-acc` ? (
-                                <><Check className="w-3 h-3 text-purple-600" /> <span className="text-purple-600 font-extrabold">Copied</span></>
-                              ) : (
-                                <><Copy className="w-3 h-3 text-gray-400" /> <span>Copy</span></>
-                              )}
-                            </button>
-                          </div>
-
-                          {/* Bank Branch / Network */}
-                          <div className="bg-slate-50/50 border border-slate-100 rounded-xl p-2.5 relative flex flex-col justify-between">
-                            <div className="pr-12">
-                              <span className="text-[8.5px] text-gray-400 uppercase font-black tracking-wider block mb-0.5">Receiving Institute</span>
-                              <p className="text-xs font-extrabold text-gray-900 select-all">{parsedBankBrand}</p>
-                            </div>
-                            <button
-                              onClick={() => {
-                                navigator.clipboard.writeText(parsedBankBrand);
-                                setCopiedId(`${tx.id}-bank`);
-                                setTimeout(() => setCopiedId(null), 1500);
-                              }}
-                              className="absolute top-2.5 right-2 p-1 bg-white border border-gray-200 hover:bg-gray-50 text-gray-500 hover:text-gray-800 rounded-md transition-all cursor-pointer flex items-center gap-1 text-[8px] font-black uppercase tracking-wider"
-                            >
-                              {copiedId === `${tx.id}-bank` ? (
-                                <><Check className="w-3 h-3 text-purple-600" /> <span className="text-purple-600 font-extrabold">Copied</span></>
-                              ) : (
-                                <><Copy className="w-3 h-3 text-gray-400" /> <span>Copy</span></>
-                              )}
-                            </button>
-                          </div>
+                        <div className="flex items-baseline gap-1.5 border-b border-gray-200 pb-2">
+                          <span className="text-2xl font-black font-mono text-gray-950">{formatNGN(tx.amount)}</span>
+                          <span className="text-[11px] text-red-705 font-black uppercase tracking-wider">Payout Claim Outflow</span>
                         </div>
 
-                        {/* Extra guide */}
-                        <div className="p-2.5 rounded-xl bg-orange-50/50 border border-orange-100 text-[10.5px] text-amber-800 leading-normal font-sans space-y-0.5">
-                          <p className="font-extrabold">&#9755; Corporate Payout Guide:</p>
-                          <p>
-                            Disperse exactly <strong>₦{tx.amount.toLocaleString()}</strong> utilizing your business bank application. Set account number to <strong>{parsedAccountNum}</strong>, select <strong>{parsedBankBrand}</strong>, and verify receipt name reads <strong>{applicantName}</strong> before clearing.
-                          </p>
+                        <p className="text-xs text-gray-550 leading-relaxed font-semibold bg-white p-2.5 rounded-xl border border-gray-150">
+                          <strong className="text-gray-400 text-[10px] uppercase font-black block mb-0.5">Withdrawal Narrative:</strong>
+                          {tx.description}
+                        </p>
+
+                        {/* Payee Disbursement Slip */}
+                        <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-3xs space-y-3.5">
+                          <div className="flex items-center justify-between border-b border-gray-100 pb-2.5">
+                            <span className="text-[9.5px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1">🏦 Direct Payee Disbursement Coordinates</span>
+                            <span className="text-[9.5px] font-black text-purple-600 bg-purple-50 border border-purple-150 px-2.5 py-0.5 rounded uppercase font-mono tracking-wider">
+                              {paymentType}
+                            </span>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            {/* Beneficiary Name */}
+                            <div className="bg-slate-50/50 border border-slate-100 rounded-xl p-2.5 relative flex flex-col justify-between">
+                              <div className="pr-12">
+                                <span className="text-[8.5px] text-gray-400 uppercase font-black tracking-wider block mb-0.5">Beneficiary Name</span>
+                                <p className="text-xs font-extrabold text-gray-900 select-all">{applicantName}</p>
+                              </div>
+                              <button
+                                onClick={() => {
+                                  navigator.clipboard.writeText(applicantName);
+                                  setCopiedId(`${tx.id}-name`);
+                                  setTimeout(() => setCopiedId(null), 1500);
+                                }}
+                                className="absolute top-2.5 right-2 p-1 bg-white border border-gray-200 hover:bg-gray-50 text-gray-500 hover:text-gray-800 rounded-md transition-all cursor-pointer flex items-center gap-1 text-[8px] font-black uppercase tracking-wider"
+                              >
+                                {copiedId === `${tx.id}-name` ? (
+                                  <><Check className="w-3 h-3 text-purple-600" /> <span className="text-purple-600 font-extrabold">Copied</span></>
+                                ) : (
+                                  <><Copy className="w-3 h-3 text-gray-400" /> <span>Copy</span></>
+                                )}
+                              </button>
+                            </div>
+
+                            {/* Account number / USDT */}
+                            <div className="bg-slate-50/50 border border-slate-100 rounded-xl p-2.5 relative flex flex-col justify-between">
+                              <div className="pr-12">
+                                <span className="text-[8.5px] text-gray-400 uppercase font-black tracking-wider block mb-0.5">Account NUBAN / Coordinates</span>
+                                <p className="text-xs font-black text-purple-600 font-mono tracking-wide select-all break-all">{parsedAccountNum}</p>
+                              </div>
+                              <button
+                                onClick={() => {
+                                  navigator.clipboard.writeText(parsedAccountNum);
+                                  setCopiedId(`${tx.id}-acc`);
+                                  setTimeout(() => setCopiedId(null), 1500);
+                                }}
+                                className="absolute top-2.5 right-2 p-1 bg-white border border-gray-200 hover:bg-gray-50 text-gray-500 hover:text-gray-800 rounded-md transition-all cursor-pointer flex items-center gap-1 text-[8px] font-black uppercase tracking-wider"
+                              >
+                                {copiedId === `${tx.id}-acc` ? (
+                                  <><Check className="w-3 h-3 text-purple-600" /> <span className="text-purple-600 font-extrabold">Copied</span></>
+                                ) : (
+                                  <><Copy className="w-3 h-3 text-gray-400" /> <span>Copy</span></>
+                                )}
+                              </button>
+                            </div>
+
+                            {/* Bank Branch / Network */}
+                            <div className="bg-slate-50/50 border border-slate-100 rounded-xl p-2.5 relative flex flex-col justify-between">
+                              <div className="pr-12">
+                                <span className="text-[8.5px] text-gray-400 uppercase font-black tracking-wider block mb-0.5">Receiving Institute</span>
+                                <p className="text-xs font-extrabold text-gray-900 select-all">{parsedBankBrand}</p>
+                              </div>
+                              <button
+                                onClick={() => {
+                                  navigator.clipboard.writeText(parsedBankBrand);
+                                  setCopiedId(`${tx.id}-bank`);
+                                  setTimeout(() => setCopiedId(null), 1500);
+                                }}
+                                className="absolute top-2.5 right-2 p-1 bg-white border border-gray-200 hover:bg-gray-50 text-gray-500 hover:text-gray-800 rounded-md transition-all cursor-pointer flex items-center gap-1 text-[8px] font-black uppercase tracking-wider"
+                              >
+                                {copiedId === `${tx.id}-bank` ? (
+                                  <><Check className="w-3 h-3 text-purple-600" /> <span className="text-purple-600 font-extrabold">Copied</span></>
+                                ) : (
+                                  <><Copy className="w-3 h-3 text-gray-400" /> <span>Copy</span></>
+                                )}
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Extra guide */}
+                          <div className="p-2.5 rounded-xl bg-orange-50/50 border border-orange-100 text-[10.5px] text-amber-800 leading-normal font-sans space-y-0.5">
+                            <p className="font-extrabold">&#9755; Corporate Payout Guide:</p>
+                            <p>
+                              Disperse exactly <strong>₦{tx.amount.toLocaleString()}</strong> utilizing your business bank application. Set account number to <strong>{parsedAccountNum}</strong>, select <strong>{parsedBankBrand}</strong>, and verify receipt name reads <strong>{applicantName}</strong> before clearing.
+                            </p>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    {/* Actions buttons */}
-                    <div className="flex flex-row md:flex-col items-center gap-2 w-full md:w-auto md:self-stretch justify-end shrink-0 md:pt-4">
-                      <button
-                        onClick={() => onDeclineWithdrawal(tx.id)}
-                        className="flex-1 md:flex-initial px-4 py-2.5 bg-red-50 hover:bg-red-100 border border-red-150 text-red-700 hover:text-red-955 rounded-xl text-xs font-black uppercase tracking-wider cursor-pointer flex items-center justify-center gap-1.5 transition-all w-full"
-                      >
-                        <XCircle className="w-4 h-4" /> Decline & Refund
-                      </button>
-                      <button
-                        onClick={() => onApproveWithdrawal(tx.id)}
-                        className="flex-1 md:flex-initial px-5 py-3 bg-purple-600 hover:bg-purple-705 text-white rounded-xl text-xs font-black uppercase tracking-wider cursor-pointer flex items-center justify-center gap-1.5 shadow-md shadow-purple-150 transition-all w-full"
-                      >
-                        <CheckCircle className="w-4 h-4" /> Authorize Payout
-                      </button>
+                      {/* Actions buttons */}
+                      <div className="flex flex-row md:flex-col items-center gap-2 w-full md:w-auto md:self-stretch justify-end shrink-0 md:pt-4">
+                        <button
+                          onClick={() => onDeclineWithdrawal(tx.id)}
+                          className="flex-1 md:flex-initial px-4 py-2.5 bg-red-50 hover:bg-red-100 border border-red-150 text-red-700 hover:text-red-955 rounded-xl text-xs font-black uppercase tracking-wider cursor-pointer flex items-center justify-center gap-1.5 transition-all w-full"
+                        >
+                          <XCircle className="w-4 h-4" /> Decline & Refund
+                        </button>
+                        <button
+                          onClick={() => onApproveWithdrawal(tx.id)}
+                          className="flex-1 md:flex-initial px-5 py-3 bg-purple-600 hover:bg-purple-705 text-white rounded-xl text-xs font-black uppercase tracking-wider cursor-pointer flex items-center justify-center gap-1.5 shadow-md shadow-purple-150 transition-all w-full"
+                        >
+                          <CheckCircle className="w-4 h-4" /> Authorize Payout
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      )}
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* Policy Rules & Platform Settings Tab */}
       {adminTab === 'settings' && (
@@ -1652,6 +2226,25 @@ export default function AdminPortal({
                 </p>
               </div>
 
+              <div className="space-y-1.5 p-4 border border-zinc-150 bg-gray-50/50 rounded-2xl">
+                <label className="block text-[10px] uppercase font-black text-gray-450 tracking-wider">
+                  ₦ Minimum Withdrawal for Normal Members
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">₦</span>
+                  <input
+                    type="number"
+                    value={adminMinNormalWithdrawal}
+                    onChange={(e) => setAdminMinNormalWithdrawal(Number(e.target.value) || 0)}
+                    placeholder="e.g. 2000"
+                    className="w-full bg-white border border-gray-200 rounded-xl pl-7 pr-3 py-2 text-xs font-semibold text-gray-800 placeholder-gray-400 focus:outline-none focus:border-purple-600"
+                  />
+                </div>
+                <p className="text-[10px] text-gray-550 font-semibold leading-relaxed">
+                  Override the minimum eligible withdrawal amount for regular accounts that do not have active referral earnings (currently <strong className="text-gray-850">₦{Number(adminMinNormalWithdrawal).toLocaleString()}</strong>).
+                </p>
+              </div>
+
               <div className="flex items-center justify-between p-3.5 border border-amber-100 bg-amber-50/10 rounded-2xl">
                 <div className="space-y-0.5 pr-4">
                   <span className="text-xs font-black text-gray-950 block">Static Identical Link For Everyone</span>
@@ -1739,9 +2332,51 @@ export default function AdminPortal({
               </span>
             </div>
 
-            <div className="flex-1 overflow-y-auto divide-y divide-gray-100 p-2 space-y-1 bg-slate-50/20">
-              {supportMode === 'tickets' ? (
-                csTickets.map((t) => {
+            <div className="p-2.5 bg-slate-50 border-b border-gray-155 relative shrink-0">
+              <div className="relative font-sans">
+                <input
+                  type="text"
+                  placeholder={supportMode === 'tickets' ? "Search tickets by name, category, subject..." : "Search chat threads by name or email..."}
+                  value={csSearch}
+                  onChange={(e) => setCsSearch(e.target.value)}
+                  className="w-full pl-8 pr-12 py-1.5 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-purple-600 focus:bg-white bg-slate-50 transition-colors animate-fade-in"
+                />
+                <User className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-gray-400" />
+                {csSearch && (
+                  <button
+                    type="button"
+                    onClick={() => setCsSearch('')}
+                    className="absolute right-3 top-2 text-xs text-purple-600 hover:underline font-bold cursor-pointer font-sans"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto divide-y divide-gray-100 p-2 space-y-1 bg-slate-50/20 font-sans">
+              {supportMode === 'tickets' ? (() => {
+                const filteredTickets = csTickets.filter(t => {
+                  const q = csSearch.toLowerCase().trim();
+                  if (!q) return true;
+                  if (t.id && t.id.toLowerCase().includes(q)) return true;
+                  if (t.subject && t.subject.toLowerCase().includes(q)) return true;
+                  if (t.category && t.category.toLowerCase().includes(q)) return true;
+                  if (t.userFullName && t.userFullName.toLowerCase().includes(q)) return true;
+                  if (t.userEmail && t.userEmail.toLowerCase().includes(q)) return true;
+                  if (t.messages && t.messages.some(m => m.text && m.text.toLowerCase().includes(q))) return true;
+                  return false;
+                });
+
+                if (filteredTickets.length === 0) {
+                  return (
+                    <div className="text-center py-12 text-gray-500 text-xs font-semibold">
+                      No tickets match "{csSearch}"
+                    </div>
+                  );
+                }
+
+                return filteredTickets.map((t) => {
                   const isSelected = selectedTicketId === t.id;
                   return (
                     <button
@@ -1770,9 +2405,25 @@ export default function AdminPortal({
                       </div>
                     </button>
                   );
-                })
-              ) : (
-                registeredUsers.map((usr) => {
+                });
+              })() : (() => {
+                const filteredUsers = registeredUsers.filter(usr => {
+                  const q = csSearch.toLowerCase().trim();
+                  if (!q) return true;
+                  if (usr.fullName && usr.fullName.toLowerCase().includes(q)) return true;
+                  if (usr.email && usr.email.toLowerCase().includes(q)) return true;
+                  return false;
+                });
+
+                if (filteredUsers.length === 0) {
+                  return (
+                    <div className="text-center py-12 text-gray-500 text-xs font-semibold">
+                      No chat threads match "{csSearch}"
+                    </div>
+                  );
+                }
+
+                return filteredUsers.map((usr) => {
                   const chatLogs = userChatThreads[usr.email.toLowerCase()] || [];
                   const isSelected = selectedUserEmailForChat?.toLowerCase() === usr.email.toLowerCase();
                   const lastMsg = chatLogs[chatLogs.length - 1];
@@ -1800,8 +2451,8 @@ export default function AdminPortal({
                       </div>
                     </button>
                   );
-                })
-              )}
+                });
+              })()}
             </div>
           </div>
 
@@ -2175,9 +2826,10 @@ export default function AdminPortal({
               const reward = parseFloat(newBonusReward) || 0;
               const claims = parseInt(newBonusMaxClaims) || 1;
               
-              onAddBonusCode(newBonusCode.trim().toUpperCase(), reward, claims);
+              onAddBonusCode(newBonusCode.trim().toUpperCase(), reward, claims, newBonusRewardType);
               setNewBonusCode('');
-              setBonusAddSuccess(`Promotional Voucher code "${newBonusCode.toUpperCase()}" with value ₦${formatNGN(reward)} issued successfully.`);
+              const successVal = newBonusRewardType === 'xnc' ? `${reward.toFixed(4)} XNC` : `₦${formatNGN(reward)}`;
+              setBonusAddSuccess(`Promotional Voucher code "${newBonusCode.toUpperCase()}" with reward ${successVal} issued successfully.`);
               setTimeout(() => setBonusAddSuccess(''), 5500);
             }}
             className="p-5 border border-purple-150 rounded-2xl bg-purple-50/5 space-y-4 shadow-2xs text-left font-sans"
@@ -2191,7 +2843,7 @@ export default function AdminPortal({
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-sans">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 font-sans">
               <div className="space-y-1.5">
                 <label className="text-[10px] uppercase tracking-wider font-extrabold text-slate-505 font-sans">Bonus Coupon Code Name</label>
                 <input
@@ -2205,13 +2857,27 @@ export default function AdminPortal({
               </div>
 
               <div className="space-y-1.5 font-sans">
-                <label className="text-[10px] uppercase tracking-wider font-extrabold text-slate-505 font-sans">Payout Reward Cash Value (₦)</label>
+                <label className="text-[10px] uppercase tracking-wider font-extrabold text-slate-505 font-sans">Reward Currency Type</label>
+                <select
+                  value={newBonusRewardType}
+                  onChange={(e) => setNewBonusRewardType(e.target.value as 'money' | 'xnc')}
+                  className="w-full px-3 py-2 bg-white border border-slate-205 rounded-xl text-xs font-bold focus:outline-none focus:ring-1 focus:ring-purple-500 font-sans cursor-pointer"
+                >
+                  <option value="money">Naira Money (₦)</option>
+                  <option value="xnc">XENA Coin (XNC)</option>
+                </select>
+              </div>
+
+              <div className="space-y-1.5 font-sans">
+                <label className="text-[10px] uppercase tracking-wider font-extrabold text-slate-505 font-sans">
+                  Payout Value {newBonusRewardType === 'xnc' ? '(XNC)' : '(₦)'}
+                </label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. 5000"
+                  placeholder={newBonusRewardType === 'xnc' ? "e.g. 500" : "e.g. 5000"}
                   value={newBonusReward}
-                  onChange={(e) => setNewBonusReward(e.target.value.replace(/\D/g, ''))}
+                  onChange={(e) => setNewBonusReward(e.target.value.replace(/[^\d.]/g, ''))}
                   className="w-full px-3 py-2 bg-white border border-slate-205 rounded-xl text-xs font-bold font-mono focus:outline-none focus:ring-1 focus:ring-purple-500 font-sans"
                 />
               </div>
@@ -2245,16 +2911,26 @@ export default function AdminPortal({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {bonusCodes && bonusCodes.map((bc) => {
                 const claimPercent = Math.min(100, Math.round((bc.claimedBy.length / bc.maxClaims) * 100));
+                const isXnc = bc.rewardType === 'xnc';
                 return (
-                  <div key={bc.id} className="p-4 border border-slate-200 hover:border-purple-200 rounded-2xl bg-white space-y-3 shadow-3xs flex flex-col justify-between relative overflow-hidden transition-all">
+                  <div key={bc.id} className="p-4 border border-slate-200 hover:border-purple-200 rounded-2xl bg-white space-y-3 shadow-3xs flex flex-col justify-between relative overflow-hidden transition-all text-left">
                     <div className="space-y-2">
                       <div className="flex justify-between items-start">
                         <div className="space-y-0.5">
-                          <span className="text-sm font-black text-slate-905 bg-slate-100 hover:bg-slate-200 border border-slate-150 px-2 py-0.5 rounded-lg font-mono">
-                            {bc.code}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-black text-slate-905 bg-slate-100 hover:bg-slate-200 border border-slate-150 px-2 py-0.5 rounded-lg font-mono">
+                              {bc.code}
+                            </span>
+                            <span className={`text-[8.5px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded border ${
+                              isXnc 
+                                ? 'bg-indigo-50 border-indigo-150 text-indigo-750' 
+                                : 'bg-emerald-50 border-emerald-150 text-emerald-750'
+                            }`}>
+                              {isXnc ? 'XNC Coin' : 'Cash (₦)'}
+                            </span>
+                          </div>
                           <p className="text-[11px] text-purple-750 font-bold font-mono pt-1">
-                            Reward: ₦{formatNGN(bc.rewardAmount)}
+                            Reward: {isXnc ? `${bc.rewardAmount.toFixed(4)} XNC` : `₦${formatNGN(bc.rewardAmount)}`}
                           </p>
                         </div>
 

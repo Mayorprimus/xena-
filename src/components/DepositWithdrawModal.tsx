@@ -17,6 +17,7 @@ interface DepositWithdrawModalProps {
   transactions?: Transaction[];
   adminApprovalSettings?: {
     minReferralWithdrawal?: number;
+    minNormalWithdrawal?: number;
     allowAnytimeWithdrawal?: boolean;
     [key: string]: any;
   };
@@ -36,6 +37,7 @@ export default function DepositWithdrawModal({
   adminApprovalSettings = {}
 }: DepositWithdrawModalProps) {
   const minRefWithdrawal = adminApprovalSettings?.minReferralWithdrawal || 5000;
+  const minNormalWithdrawal = adminApprovalSettings?.minNormalWithdrawal || 2000;
   const userHasReferrals = !!((wallet.referralsCount && wallet.referralsCount > 0) || (wallet.referralEarnings && wallet.referralEarnings > 0));
 
   const [withdrawSource, setWithdrawSource] = useState<'wallet' | 'referral'>('wallet');
@@ -134,17 +136,10 @@ export default function DepositWithdrawModal({
         return false;
       }
       
-      if (withdrawSource === 'referral' || userHasReferrals) {
-        const minVal = withdrawSource === 'referral' ? minRefWithdrawal : 2000;
-        if (amtNum < minVal) {
-          setErrorMessage(`Minimum withdrawal amount is ${formatNGN(minVal)}.`);
-          return false;
-        }
-      } else {
-        if (amtNum < 2000) {
-          setErrorMessage('Minimum withdrawal amount is ₦2,005.00.');
-          return false;
-        }
+      const minVal = withdrawSource === 'referral' ? minRefWithdrawal : minNormalWithdrawal;
+      if (amtNum < minVal) {
+        setErrorMessage(`Minimum withdrawal amount is ${formatNGN(minVal)}.`);
+        return false;
       }
     } else {
       if (amtNum < 1000) {
@@ -357,14 +352,14 @@ export default function DepositWithdrawModal({
                 <input
                   id="input-amount"
                   type="number"
-                  placeholder={type === 'deposit' ? "1,000" : (withdrawSource === 'referral' ? String(minRefWithdrawal) : (userHasReferrals ? String(minRefWithdrawal) : "2,005"))}
+                  placeholder={type === 'deposit' ? "1,000" : (withdrawSource === 'referral' ? String(minRefWithdrawal) : String(minNormalWithdrawal))}
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   className="w-full pl-9 pr-4 py-3 bg-slate-50 border-2 border-slate-205 rounded-2xl text-2xl font-black focus:bg-white focus:border-purple-600 focus:outline-none transition-all placeholder:text-slate-300 text-slate-800 font-mono shadow-inner"
                 />
               </div>
               <div className="mt-1.5 flex justify-between text-xs text-slate-400 font-bold">
-                <span>Min: ₦{type === 'deposit' ? '1,000.00' : (withdrawSource === 'referral' ? minRefWithdrawal.toLocaleString() + '.00' : (userHasReferrals ? minRefWithdrawal.toLocaleString() + '.00' : '2,000.00'))}</span>
+                <span>Min: ₦{type === 'deposit' ? '1,000.00' : (withdrawSource === 'referral' ? minRefWithdrawal.toLocaleString() + '.00' : minNormalWithdrawal.toLocaleString() + '.00')}</span>
                 {type === 'withdraw' && (
                   <span>Withdrawable: <strong className="text-purple-700 font-mono font-black">{formatNGN(withdrawSource === 'referral' ? (wallet.referralEarnings || 0) : walletBalance)}</strong></span>
                 )}
@@ -377,9 +372,7 @@ export default function DepositWithdrawModal({
                 ? [1500, 3000, 5000, 10000] 
                 : (withdrawSource === 'referral'
                   ? [minRefWithdrawal, minRefWithdrawal * 2, wallet.referralEarnings]
-                  : (userHasReferrals 
-                    ? [minRefWithdrawal, minRefWithdrawal * 2, minRefWithdrawal * 5, walletBalance] 
-                    : [2000, 5000, 15000, walletBalance]))).map((preset, idx) => {
+                  : [minNormalWithdrawal, minNormalWithdrawal * 2, minNormalWithdrawal * 5, walletBalance])).map((preset, idx) => {
                 if (!preset || preset <= 0) return null;
                 const isMax = (withdrawSource === 'referral' ? idx === 2 : idx === 3) && type === 'withdraw';
                 return (

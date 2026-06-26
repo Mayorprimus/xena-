@@ -31,7 +31,7 @@ import {
   Wallet
 } from 'lucide-react';
 
-import { ActiveInvestment, UserWallet, Transaction, SupportTicket, DepositAccount, ReferralRelationship, BonusCode } from './types';
+import { ActiveInvestment, UserWallet, Transaction, SupportTicket, DepositAccount, ReferralRelationship, BonusCode, GlobalMessage } from './types';
 import { productsList } from './data';
 import { formatNGN, generateRef } from './utils';
 
@@ -53,6 +53,7 @@ import WelcomeXenaModal from './components/WelcomeXenaModal';
 import CryptoSwapSection from './components/CryptoSwapSection';
 import DailyStreakCard from './components/DailyStreakCard';
 import XenaLogo from './components/XenaLogo';
+import GlobalChatView from './components/GlobalChatView';
 import { motion } from 'motion/react';
 
 export default function App() {
@@ -65,7 +66,7 @@ export default function App() {
   const isInitializedFromServer = useRef(false);
   const isSyncingFromServer = useRef(false);
 
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'invest' | 'crypto' | 'simulator' | 'faq' | 'cs' | 'admin' | 'profile'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'invest' | 'crypto' | 'simulator' | 'faq' | 'cs' | 'admin' | 'profile' | 'global-chat'>('dashboard');
   const [adminApprovalSettings, setAdminApprovalSettings] = useState({
     requireDepositApproval: true,
     requireInvestmentApproval: true,
@@ -75,6 +76,7 @@ export default function App() {
     csNumber: '08158432605',
     officialWhatsAppGroup: 'https://chat.whatsapp.com/KHZgCi1h24154DqIIHz3VE',
     minReferralWithdrawal: 5000,
+    minNormalWithdrawal: 2000,
     allowAnytimeWithdrawal: false
   });
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -454,6 +456,35 @@ export default function App() {
     };
   });
 
+  const [globalMessages, setGlobalMessages] = useState<GlobalMessage[]>(() => {
+    const saved = localStorage.getItem('lafarge_global_messages');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {}
+    }
+    return [];
+  });
+
+  const [lastSeenGlobalChat, setLastSeenGlobalChat] = useState<number>(() => {
+    const saved = localStorage.getItem('lafarge_last_seen_global_chat');
+    return saved ? parseInt(saved, 10) : 0;
+  });
+
+  useEffect(() => {
+    if (activeTab === 'global-chat') {
+      const now = Date.now();
+      setLastSeenGlobalChat(now);
+      localStorage.setItem('lafarge_last_seen_global_chat', String(now));
+    }
+  }, [activeTab]);
+
+  const globalChatUnreadCount = globalMessages.filter(
+    (msg) => msg.timestamp > lastSeenGlobalChat && (msg.senderEmail || '').toLowerCase() !== (wallet?.email || '').toLowerCase()
+  ).length;
+
+
+
   const csChatMessages = userChatThreads[wallet.email.toLowerCase()] || [
     {
       sender: 'agent',
@@ -585,6 +616,10 @@ export default function App() {
     localStorage.setItem('lafarge_referrals', JSON.stringify(referrals));
   }, [referrals]);
 
+  useEffect(() => {
+    localStorage.setItem('lafarge_global_messages', JSON.stringify(globalMessages));
+  }, [globalMessages]);
+
   // Dynamic automatic synchronization with full-stack server
   useEffect(() => {
     let isMounted = true;
@@ -607,6 +642,7 @@ export default function App() {
               if (data.csTickets) setCsTickets(data.csTickets);
               if (data.userChatThreads) setUserChatThreads(data.userChatThreads);
               if (data.referrals) setReferrals(data.referrals);
+              if (data.globalMessages) setGlobalMessages(data.globalMessages);
               if (data.adminApprovalSettings) {
                 setAdminApprovalSettings({
                   requireDepositApproval: data.adminApprovalSettings.requireDepositApproval ?? true,
@@ -617,6 +653,7 @@ export default function App() {
                   csNumber: data.adminApprovalSettings.csNumber ?? '08158432605',
                   officialWhatsAppGroup: data.adminApprovalSettings.officialWhatsAppGroup ?? 'https://chat.whatsapp.com/KHZgCi1h24154DqIIHz3VE',
                   minReferralWithdrawal: data.adminApprovalSettings.minReferralWithdrawal ?? 5000,
+                  minNormalWithdrawal: data.adminApprovalSettings.minNormalWithdrawal ?? 2000,
                   allowAnytimeWithdrawal: data.adminApprovalSettings.allowAnytimeWithdrawal ?? false
                 });
               }
@@ -783,6 +820,7 @@ export default function App() {
           userChatThreads,
           referrals,
           adminApprovalSettings,
+          globalMessages,
           clientVersion: localVersion.current
         };
 
@@ -829,7 +867,8 @@ export default function App() {
     csTickets,
     userChatThreads,
     referrals,
-    adminApprovalSettings
+    adminApprovalSettings,
+    globalMessages
   ]);
 
   const areWalletsDifferent = (w1: any, w2: any): boolean => {
@@ -1067,7 +1106,7 @@ export default function App() {
     setSimulatedTime((prevTime) => prevTime + msToAdd);
   };
 
-  const handleAddBonusCode = (code: string, rewardAmount: number, maxClaims: number) => {
+  const handleAddBonusCode = (code: string, rewardAmount: number, maxClaims: number, rewardType: 'money' | 'xnc') => {
     const newCode: BonusCode = {
       id: `bonus-${Math.random().toString(36).substring(2, 9)}`,
       code: code.trim().toUpperCase(),
@@ -1075,7 +1114,8 @@ export default function App() {
       maxClaims,
       claimedBy: [],
       isActive: true,
-      createdAt: Date.now()
+      createdAt: Date.now(),
+      rewardType
     };
     setBonusCodes((prev) => [newCode, ...prev]);
   };
@@ -1117,23 +1157,44 @@ export default function App() {
     };
     setBonusCodes(updatedCodes);
     
+    const isXnc = targetCode.rewardType === 'xnc';
+
     // Credit user wallet and registered users list
-    setWallet((prev) => ({
-      ...prev,
-      walletBalance: prev.walletBalance + targetCode.rewardAmount,
-      earnedBalance: prev.earnedBalance + targetCode.rewardAmount
-    }));
+    setWallet((prev) => {
+      if (isXnc) {
+        const currentXnc = prev.xenaBalance || 0;
+        return {
+          ...prev,
+          xenaBalance: currentXnc + targetCode.rewardAmount
+        };
+      } else {
+        return {
+          ...prev,
+          walletBalance: prev.walletBalance + targetCode.rewardAmount,
+          earnedBalance: prev.earnedBalance + targetCode.rewardAmount
+        };
+      }
+    });
     
     setRegisteredUsers((prevUsers) =>
-      prevUsers.map((u) =>
-        u.email.toLowerCase() === wallet.email.toLowerCase()
-          ? {
+      prevUsers.map((u) => {
+        if (u.email.toLowerCase() === wallet.email.toLowerCase()) {
+          if (isXnc) {
+            const currentXnc = u.xenaBalance || 0;
+            return {
+              ...u,
+              xenaBalance: currentXnc + targetCode.rewardAmount
+            };
+          } else {
+            return {
               ...u,
               walletBalance: u.walletBalance + targetCode.rewardAmount,
               earnedBalance: u.earnedBalance + targetCode.rewardAmount
-            }
-          : u
-      )
+            };
+          }
+        }
+        return u;
+      })
     );
     
     // Add transaction history
@@ -1145,15 +1206,20 @@ export default function App() {
         status: 'completed',
         date: simulatedTime,
         reference: generateRef(),
-        description: `Promo Bonus Claimed: ${targetCode.code}`,
-        userEmail: wallet.email
+        description: `Promo Bonus Claimed: ${targetCode.code} (${isXnc ? 'XNC' : 'NGN'})`,
+        userEmail: wallet.email,
+        currency: isXnc ? 'XNC' : undefined
       },
       ...prev
     ]);
     
+    const formattedReward = isXnc 
+      ? `${targetCode.rewardAmount.toFixed(4)} XNC` 
+      : `₦${formatNGN(targetCode.rewardAmount)}`;
+
     return {
       success: true,
-      message: `Successfully claimed promo reward! ₦${formatNGN(targetCode.rewardAmount)} has been credited to your balance.`
+      message: `Successfully claimed promo reward! ${formattedReward} has been credited to your balance.`
     };
   };
 
@@ -1403,6 +1469,10 @@ export default function App() {
 
         return baseTxList;
       });
+
+      if (!requireApproval) {
+        autoApproveReferralIfPending(wallet.email);
+      }
     } else {
       const requireApproval = adminApprovalSettings.requireWithdrawalApproval;
       const isReferral = source === 'referral';
@@ -1503,6 +1573,15 @@ export default function App() {
     );
   };
 
+  const autoApproveReferralIfPending = (referredEmail: string) => {
+    const targetRef = referrals.find(
+      (r) => r.referredEmail.toLowerCase() === referredEmail.toLowerCase() && r.status === 'pending'
+    );
+    if (targetRef) {
+      handleApproveReferral(targetRef.id);
+    }
+  };
+
   const handleApproveDeposit = (txId: string) => {
     const targetTx = transactions.find((tx) => tx.id === txId);
     if (!targetTx || targetTx.status !== 'pending') return;
@@ -1538,6 +1617,9 @@ export default function App() {
         return u;
       })
     );
+
+    // Auto-approve referral if this user was referred and has a pending referral record
+    autoApproveReferralIfPending(emailToUpdate);
   };
 
   const handleDeclineDeposit = (txId: string) => {
@@ -1915,6 +1997,52 @@ export default function App() {
     }, 1500);
   };
 
+  const handleSendGlobalMessage = (text: string) => {
+    if (!text.trim()) return;
+
+    const userUid = wallet.uid || `XENA-${wallet.referralCode?.split('-').pop() || '49104'}`;
+
+    const newMsg: GlobalMessage = {
+      id: `gmsg-${Math.floor(100000 + Math.random() * 900000)}`,
+      senderName: wallet.fullName,
+      senderUid: userUid,
+      senderEmail: wallet.email,
+      text: text,
+      timestamp: Date.now()
+    };
+
+    setGlobalMessages(prev => [...prev, newMsg]);
+  };
+
+  const handleClearGlobalMessage = (messageId: string) => {
+    setGlobalMessages(prev => prev.filter(msg => msg.id !== messageId));
+  };
+
+  const handleToggleReaction = (messageId: string, emoji: string) => {
+    setGlobalMessages(prev => prev.map(msg => {
+      if (msg.id !== messageId) return msg;
+      
+      const reactions = { ...(msg.reactions || {}) };
+      const currentUsers = reactions[emoji] || [];
+      const userEmail = wallet.email.toLowerCase();
+      
+      if (currentUsers.includes(userEmail)) {
+        // Remove reaction
+        reactions[emoji] = currentUsers.filter(email => email !== userEmail);
+      } else {
+        // Add reaction
+        reactions[emoji] = [...currentUsers, userEmail];
+      }
+      
+      // Clean up empty reaction arrays
+      if (reactions[emoji].length === 0) {
+        delete reactions[emoji];
+      }
+      
+      return { ...msg, reactions };
+    }));
+  };
+
   const handleCreateSupportTicket = (category: string, subject: string) => {
     if (!subject.trim()) return;
 
@@ -2168,13 +2296,21 @@ export default function App() {
     );
   }
 
+  const isChatActive = activeTab === 'global-chat';
+
   return (
-    <div className="min-h-screen bg-[#070a0f] text-slate-100 font-sans flex flex-col antialiased pb-24 sm:pb-32">
+    <div className={`min-h-screen bg-[#070a0f] text-slate-100 font-sans flex flex-col antialiased ${
+      isChatActive ? 'pb-16 sm:pb-24' : 'pb-24 sm:pb-32'
+    }`}>
       
       {/* (Upper Brand Nav header and sidebar removed for premium, distraction-free widescreen workspace look with Floating Bottom Dock navigation) */}
 
       {/* Primary Container */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full space-y-8 text-left">
+      <main className={`flex-1 w-full text-left ${
+        isChatActive 
+          ? 'h-[calc(100vh-64px)] sm:h-[calc(100vh-96px)] flex flex-col overflow-hidden' 
+          : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8'
+      }`}>
         
         {/* Prominent Bank-Style Balance Cards Section — Only visible on Home Page (activeTab === 'dashboard') */}
         {activeTab === 'dashboard' && (
@@ -3521,6 +3657,7 @@ export default function App() {
                 csNumber: settings.csNumber || '08158432605',
                 officialWhatsAppGroup: settings.officialWhatsAppGroup || 'https://chat.whatsapp.com/KHZgCi1h24154DqIIHz3VE',
                 minReferralWithdrawal: Number(settings.minReferralWithdrawal) || 5000,
+                minNormalWithdrawal: Number(settings.minNormalWithdrawal) || 2000,
                 allowAnytimeWithdrawal: !!settings.allowAnytimeWithdrawal
               })}
               onApproveDeposit={handleApproveDeposit}
@@ -3549,6 +3686,24 @@ export default function App() {
               bonusCodes={bonusCodes}
               onAddBonusCode={handleAddBonusCode}
               onDeleteBonusCode={handleDeleteBonusCode}
+            />
+          </motion.div>
+        )}
+
+        {activeTab === 'global-chat' && (
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            className="flex-1 flex flex-col h-full w-full overflow-hidden"
+          >
+            <GlobalChatView
+              wallet={wallet}
+              globalMessages={globalMessages}
+              onSendMessage={handleSendGlobalMessage}
+              onClearMessage={handleClearGlobalMessage}
+              onToggleReaction={handleToggleReaction}
+              isAdmin={isAdmin}
             />
           </motion.div>
         )}
@@ -3595,11 +3750,12 @@ export default function App() {
 
       {/* Premium Floating Bottom Navigation Dock (Visible on Desktop & Mobile) */}
       <div className="fixed bottom-0 sm:bottom-6 left-0 sm:left-1/2 sm:-translate-x-1/2 w-full sm:max-w-2xl bg-[#0c1222] border-t-2 border-t-blue-500 sm:border border-slate-750 z-50 px-1 sm:px-4 py-2 sm:py-3 shadow-[0_12px_45px_rgba(0,0,0,0.95),0_0_25px_rgba(59,130,246,0.3)] sm:rounded-2xl">
-        <div className={`grid ${isAdmin ? 'grid-cols-7' : 'grid-cols-6'} sm:flex sm:justify-around items-center w-full gap-0.5 sm:gap-2 px-0.5`}>
+        <div className={`grid ${isAdmin ? 'grid-cols-8' : 'grid-cols-7'} sm:flex sm:justify-around items-center w-full gap-0.5 sm:gap-2 px-0.5`}>
           {[
             { name: 'Portfolio', id: 'dashboard', icon: Landmark },
             { name: 'Shares', id: 'invest', icon: Compass },
             { name: 'Wallet', id: 'crypto', icon: Wallet },
+            { name: 'Chat', id: 'global-chat', icon: MessageSquare },
             { name: 'Simulator', id: 'simulator', icon: TrendingUp },
             { name: 'Profile', id: 'profile', icon: User },
             { name: 'Support', id: 'cs', icon: Headphones },
@@ -3615,12 +3771,17 @@ export default function App() {
                   setActiveTab(tab.id as any);
                   setIsMobileMenuOpen(false);
                 }}
-                className={`flex flex-col items-center gap-0.5 py-1 px-0.5 sm:px-4 rounded-xl transition-all cursor-pointer border text-center group ${
+                className={`flex flex-col items-center gap-0.5 py-1 px-0.5 sm:px-4 rounded-xl transition-all cursor-pointer border text-center group relative ${
                   isActive 
                     ? 'bg-blue-600/15 border-blue-500/40 text-blue-400 shadow-[0_0_12px_rgba(59,130,246,0.25)]' 
                     : 'border-transparent text-slate-400 hover:text-white hover:bg-slate-800/40'
                 }`}
               >
+                {tab.id === 'global-chat' && globalChatUnreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 sm:right-1 bg-indigo-500 text-white font-mono font-black text-[7.5px] h-3.5 w-3.5 flex items-center justify-center rounded-full ring-2 ring-[#0c1222] animate-bounce z-10 shadow-lg">
+                    {globalChatUnreadCount}
+                  </span>
+                )}
                 <Icon className={`w-4 h-4 sm:w-5 sm:h-5 transition-transform ${isActive ? 'text-blue-400 scale-110 drop-shadow-[0_0_5px_rgba(59,130,246,0.7)]' : 'text-slate-400 group-hover:text-white'}`} />
                 <span className={`text-[7px] sm:text-[9.5px] uppercase tracking-wider font-extrabold mt-0.5 ${isActive ? 'text-blue-300' : 'text-slate-400 font-bold'}`}>
                   {tab.name}

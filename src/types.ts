@@ -72,6 +72,7 @@ export interface Transaction {
   reference: string;
   description: string;
   userEmail?: string;
+  currency?: string;
 }
 
 export interface TicketMessage {
@@ -120,5 +121,17 @@ export interface BonusCode {
   claimedBy: string[]; // List of user emails who claimed it
   isActive: boolean;
   createdAt: number;
+  rewardType?: 'money' | 'xnc';
 }
+
+export interface GlobalMessage {
+  id: string;
+  senderName: string;
+  senderUid: string;
+  senderEmail: string;
+  text: string;
+  timestamp: number;
+  reactions?: { [emoji: string]: string[] }; // emoji character -> list of user emails
+}
+
 

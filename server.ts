@@ -186,6 +186,25 @@ async function startServer() {
     ]
   };
 
+  const initialGlobalMessages = [
+    {
+      id: 'gmsg-1',
+      senderName: 'System Auditor',
+      senderUid: 'XENA-SYSTEM',
+      senderEmail: 'admin1234@gmail.com',
+      text: 'Welcome to the XENA Global Shareholder Lounge! This secure global feed is active for all institutional shareholders to discuss Lafarge yield indexes and corporate strategies.',
+      timestamp: Date.now() - 3600000 * 2
+    },
+    {
+      id: 'gmsg-2',
+      senderName: 'Jeremiah Obazee',
+      senderUid: 'XENA-49104',
+      senderEmail: 'jeremiahobazee11@gmail.com',
+      text: 'Excellent streak dividends added. Let me know if you guys also got your 23h loyalty rewards.',
+      timestamp: Date.now() - 3600000 * 1
+    }
+  ];
+
   // Initial State Database Struct
   let dbState = {
     version: 1,
@@ -196,6 +215,7 @@ async function startServer() {
     csTickets: initialCsTickets,
     userChatThreads: initialUserChatThreads,
     referrals: [] as any[],
+    globalMessages: initialGlobalMessages,
     adminApprovalSettings: {
       requireDepositApproval: true,
       requireInvestmentApproval: true,
@@ -222,6 +242,7 @@ async function startServer() {
         csTickets: data.csTickets || initialCsTickets,
         userChatThreads: data.userChatThreads || initialUserChatThreads,
         referrals: data.referrals || [],
+        globalMessages: data.globalMessages || initialGlobalMessages,
         adminApprovalSettings: {
           requireDepositApproval: data.adminApprovalSettings?.requireDepositApproval ?? true,
           requireInvestmentApproval: data.adminApprovalSettings?.requireInvestmentApproval ?? true,
@@ -234,6 +255,20 @@ async function startServer() {
           allowAnytimeWithdrawal: data.adminApprovalSettings?.allowAnytimeWithdrawal ?? false
         }
       };
+
+      // Ensure all loaded globalMessages have senderEmail for compatibility
+      if (dbState.globalMessages) {
+        dbState.globalMessages = dbState.globalMessages.map((msg: any) => {
+          if (!msg.senderEmail) {
+            let senderEmail = 'jeremiahobazee11@gmail.com';
+            if (msg.senderUid === 'XENA-SYSTEM') {
+              senderEmail = 'admin1234@gmail.com';
+            }
+            return { ...msg, senderEmail };
+          }
+          return msg;
+        });
+      }
 
       // Self-healing migration to inject new OPay default account if it's not present
       const opayExists = dbState.depositAccounts.some((acc: any) => acc.accountNumber === '8158432605');
@@ -280,6 +315,7 @@ async function startServer() {
       if (updates.userChatThreads !== undefined) dbState.userChatThreads = updates.userChatThreads;
       if (updates.referrals !== undefined) dbState.referrals = updates.referrals;
       if (updates.adminApprovalSettings !== undefined) dbState.adminApprovalSettings = updates.adminApprovalSettings;
+      if (updates.globalMessages !== undefined) dbState.globalMessages = updates.globalMessages;
 
       fs.writeFileSync(DB_FILE, JSON.stringify(dbState, null, 2));
       res.json(dbState);

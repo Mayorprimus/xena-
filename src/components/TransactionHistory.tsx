@@ -152,7 +152,8 @@ export default function TransactionHistory({ transactions }: TransactionHistoryP
                   <td className={`py-3.5 px-4 text-right font-black font-mono text-[13px] ${
                     tx.type === 'withdraw' || tx.type === 'invest' ? 'text-slate-200' : 'text-blue-400'
                   }`}>
-                    {tx.type === 'withdraw' || tx.type === 'invest' ? '-' : '+'}{formatNGN(tx.amount)}
+                    {tx.type === 'withdraw' || tx.type === 'invest' ? '-' : '+'}
+                    {tx.currency === 'XNC' ? `${tx.amount.toFixed(4)} XNC` : formatNGN(tx.amount)}
                   </td>
                 </tr>
               ))}
